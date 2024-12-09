@@ -4359,6 +4359,9 @@ def SourceFunctionFinal(source, sourceKey):
                 data = json.load(f)
                 hist_data = data['data']
                 for hdata in hist_data:
+                    hdata['fileKey'] = s
+                    sourceKey.append('fileKey')
+                    sourceKey=list(set(sourceKey))
                     DataItem.append(extract_multiple_keys(hdata, sourceKey))
                
                     
@@ -4368,6 +4371,9 @@ def SourceFunctionFinal(source, sourceKey):
                 data = json.load(f)
                 hist_data = data['data']
                 for hdata in hist_data:
+                    hdata['fileKey'] = s
+                    sourceKey.append('fileKey')
+                    sourceKey=list(set(sourceKey))
                     DataItem.append(extract_multiple_keys(hdata, sourceKey))
                     
             fileName = main_media_url+f'/media/upload_file/investing/json/{s}'
@@ -4376,6 +4382,9 @@ def SourceFunctionFinal(source, sourceKey):
                 data = json.load(f)
                 hist_data = data['data']
                 for hdata in hist_data:
+                    hdata['fileKey'] = s
+                    sourceKey.append('fileKey')
+                    sourceKey=list(set(sourceKey))
                     DataItem.append(extract_multiple_keys(hdata, sourceKey))
 
         return DataItem
@@ -4627,6 +4636,71 @@ def FormulaFunctionFlowChart(sourceData, formulaKey):
         return Response({'status': status.HTTP_400_BAD_REQUEST, 'message':f'Something errors or {err}'}, status=status.HTTP_400_BAD_REQUEST)      
 
 
+
+    try:
+        pdData = pd.DataFrame(sourceData)
+        for i in  range(int(len(formulaKey)/3)):
+            col1 = f'a_colA{i+1}'
+            op = f'a_op{i+1}'
+            col2 = f'a_colB{i+1}'
+            col1_check = ColumnCheckStart(pdData, formulaKey[col1])
+            col2_check = ColumnCheckStart(pdData, formulaKey[col2])
+            keyValue1 = f'resultValue{i+1}'
+
+                    
+
+            if col1_check == True and col2_check == True and formulaKey[op] == '+':
+                pdData['result'] = pdData[formulaKey[col1]] + pdData[formulaKey[col2]]
+            if col1_check == True and col2_check == True and formulaKey[op] == '+' and formulaKey[col1] == f'result{i}':
+                pdData['result'] = pdData['result'] + pdData[formulaKey[col2]]
+            if col1_check == True and col2_check == False and formulaKey[op] == '+' and formulaKey[col1] == f'result{i}':
+                pdData['result'] = pdData['result'] + pdData[formulaKey[col2]]
+            if col1_check == False and col2_check == False and formulaKey[op] == '+' and formulaKey[col1] == f'result{i}':
+                pdData['result'] = pdData['result'] + int(formulaKey[col2])
+            if col1_check == False and col2_check == False and formulaKey[op] == '+':
+                pdData['result'] = pdData['result'] + int(formulaKey[col2])
+
+                    
+            if col1_check == True and col2_check == True and formulaKey[op] == '-':
+                pdData['result'] = pdData[formulaKey[col1]] - pdData[formulaKey[col2]]
+            if col1_check == True and col2_check == True and formulaKey[op] == '-' and formulaKey[col1] == f'result{i}':
+                pdData['result'] = pdData['result'] - pdData[formulaKey[col2]]
+            if col1_check == True and col2_check == False and formulaKey[op] == '-' and formulaKey[col1] == f'result{i}':
+                pdData['result'] = pdData['result'] - pdData[formulaKey[col2]]
+            if col1_check == False and col2_check == False and formulaKey[op] == '-':
+                pdData['result'] = pdData['result'] - int(formulaKey[col2])    
+                
+            if col1_check == True and col2_check == True and formulaKey[op] == '*':
+                pdData['result'] = pdData[formulaKey[col1]] * pdData[formulaKey[col2]]
+            if col1_check == True and col2_check == True and formulaKey[op] == '*' and formulaKey[col1] == f'result{i}':
+                pdData['result'] = pdData['result'] * pdData[formulaKey[col2]]
+            if col1_check == False and col2_check == True and formulaKey[op] == '*' and formulaKey[col1] == f'result{i}':
+                pdData['result'] = pdData['result'] * pdData[formulaKey[col2]]
+            if col1_check == False and col2_check == False and formulaKey[op] == '*':
+                pdData['result'] = pdData['result'] * int(formulaKey[col2])    
+                
+            if col1_check == True and col2_check == True and formulaKey[op] == '/':
+                pdData['result'] = pdData[formulaKey[col1]] / pdData[formulaKey[col2]]
+            if col1_check == True and col2_check == True and formulaKey[op] == '/' and formulaKey[col1] == f'result{i}':
+                pdData['result'] = pdData['result'] / pdData[formulaKey[col2]]
+            if col1_check == False and col2_check == True and formulaKey[op] == '/' and formulaKey[col1] == f'result{i}':
+                pdData['result'] = pdData['result'] / pdData[formulaKey[col2]] 
+            if col1_check == False and col2_check == False and formulaKey[op] == '/':
+                pdData['result'] = pdData['result'] / int(formulaKey[col2])
+
+            pdData['fileKey'] = key            
+        pdata = pdData.to_dict('records')
+        # print("pdata", pdata)
+        # data_object1[x] = pdata
+        # if len(data_object1) != 0:
+        #     sourceData1.append(data_object1)
+        #     data_object1= {}   
+
+        return pdata
+    except Exception as err:
+        return Response({'status': status.HTTP_400_BAD_REQUEST, 'message':f'Something errors or {err}'}, status=status.HTTP_400_BAD_REQUEST)      
+
+# def FormulaFunctionFlowChartFinal(sourceData, key, formulaKey):
 def FormulaFunctionFlowChartFinal(sourceData, formulaKey):
     try:
         pdData = pd.DataFrame(sourceData)
@@ -4678,7 +4752,8 @@ def FormulaFunctionFlowChartFinal(sourceData, formulaKey):
                 pdData['result'] = pdData['result'] / pdData[formulaKey[col2]] 
             if col1_check == False and col2_check == False and formulaKey[op] == '/':
                 pdData['result'] = pdData['result'] / int(formulaKey[col2])
-                        
+
+            # pdData['fileKey'] = key            
         pdata = pdData.to_dict('records')
         # print("pdata", pdata)
         # data_object1[x] = pdata
@@ -5695,6 +5770,16 @@ def FilterTypeCheck(n):
     except Exception as error:
         print("error", error)
 
+
+def KeyFindOut(KeyData):
+    try:
+        keyItem = []
+        for fk in KeyData:
+            keyItem.append(fk)
+        return list(set(keyItem))
+    except Exception as error:
+        print("error", error)            
+
 def FlowChartData(node_data):
     try:
         # print("nnncdkdkd")
@@ -5713,51 +5798,33 @@ def FlowChartData(node_data):
         dataType = ''
         for nd in node_data:
             if nd != "merge_data":
-                # print("node_data[nd]", node_data[nd])
-
                 if  node_data[nd]['data']['type'] == 'container':
-                    # print("node_data[nd]['data']['type']['data']", node_data[nd]['data']['data'])
                     processType = node_data[nd]['data']['data']['container']['processType']
-                count = 0
-                for key in node_data[nd]:
-                    print("key", key)
-                    # if node_data[nd][key]['data']['type'] == 'source' and node_data[nd][key]['data']['data']['source']['sourceType'] == 'get data' and node_data[nd][key]['data']['data']['source']['sourceInfoType'] == 'json data':
-                    #     # print("node_data[nd][key]['data']['type']", node_data[nd][key]['data']['type'])
-                    #     # print("node_data[nd][key]['data']['data']", node_data[nd][key]['data']['data'])
-                    #     print("sourceKey", node_data[nd][key]['data']['data']['source']["sourceKey"])
-                    #     print("source", node_data[nd][key]['data']['data']['source']["source"])
-                    #     # if nd['data']['source']['sourceType'] == 'get data' and nd['data']['source']['sourceInfoType'] == 'json data':
-                        # sourceKey += nd['data']['source']["sourceKey"]
-                        # source += nd['data']['source']['source']
-                        # sourceData += SourceFunction(nd['data']['source']['source'])
-                        # if node_data[nd][key]['data']['type'] == 'filter':
-                        #     print("node_data[nd][key]['data']['type']", node_data[nd][key]['data']['type'])
-                        #     print("node_data[nd][key]['data']['data']", node_data[nd][key]['data']['data'])
-    
 
-                   
-                    if key != 'data':  
-                        # print("node_data[nd][key]['data']['type']", node_data[nd][key]['data']['type'])
-                        # print("node_data[nd][key]['data']['data']", node_data[nd][key]['data']['data']) 
-                        # print("node_data[nd][key]['data']['data']['source']['sourceType']", node_data[nd][key]['data']['data']['source']['sourceType']) 
-                        # print("node_data[nd][key]['data']['data']['source']['sourceInfoType']", node_data[nd][key]['data']['data']['source']['sourceInfoType']) 
+                count = 0
+                for key in node_data[nd]: #nd=nodeid
+                
+                    if key != 'data':  # key=nodeid
                         count+=1
-                        if node_data[nd][key]['data']['type'] == 'source' and node_data[nd][key]['data']['data']['source']['sourceType'] == 'get data' and node_data[nd][key]['data']['data']['source']['sourceInfoType'] == 'json data':
-                            sourceSection = {}
-                            sourceSection["source"] = node_data[nd][key]['data']['data']['source']["source"]
-                            sourceSection["sourceKey"] = node_data[nd][key]['data']['data']['source']["sourceKey"]
-                            sourceSection["sourceData"] = SourceFunctionFinal(node_data[nd][key]['data']['data']['source']["source"], node_data[nd][key]['data']['data']['source']["sourceKey"])
-                            fl1[key] = sourceSection
-                            # sourceKey = node_data[nd][key]['data']['data']['source']["sourceKey"]
-                            dataType = node_data[nd][key]['data']['data']['source']['sourceInfoType']
-              
-                        # print("len key", len(node_data[nd][key]))
-                        # print("node_data[nd]", node_data[nd])
+                        # if node_data[nd][key]['data']['type'] == 'source' and node_data[nd][key]['data']['data']['source']['sourceType'] == 'get data' and node_data[nd][key]['data']['data']['source']['sourceInfoType'] == 'json data':
+                        if node_data[nd][key]['data']['type'] == 'source' and node_data[nd][key]['data']['data']['source']['sourceType'] == 'get data':
+                            if node_data[nd][key]['data']['data']['source']['sourceInfoType'] == 'json data':
+                                sourceSection = {}
+                                sourceSection["source"] = node_data[nd][key]['data']['data']['source']["source"]
+                                sourceSection["sourceKey"] = node_data[nd][key]['data']['data']['source']["sourceKey"]
+                                sourceSection["sourceData"] = SourceFunctionFinal(node_data[nd][key]['data']['data']['source']["source"], node_data[nd][key]['data']['data']['source']["sourceKey"])
+                                fl1[key] = sourceSection
+                                # sourceKey = node_data[nd][key]['data']['data']['source']["sourceKey"]
+                                dataType = node_data[nd][key]['data']['data']['source']['sourceInfoType']
+                            elif node_data[nd][key]['data']['data']['source']['sourceInfoType'] == 'external file creation':
+                                #external file create=tion function call
+                                print("hello")
                         depth = find_depth(node_data[nd][key])
                         print("Depth of JSON:", depth)
                         print("depth[:-2] of JSON:", depth[:-2])
                         countdp = 0
-                        for dp in depth[:-2]:
+                        countdf = 0
+                        for dp in depth:
                             print("dp", dp)
                             print("dp[0]", dp[0])
                             key_to_find = dp[0]
@@ -5765,43 +5832,75 @@ def FlowChartData(node_data):
 
                             if len(results) !=0:
                                 for path, value in results:
-                                    # print("path", path)
-                                    # print("value", value)
-                                    # print("value['data']", value['data'])
-                                    # print("value['data']['data']", value['data']['data'])
-                                    if value['data']['type'] == 'filter' and value['data']['data']['filter']['sourceType'] == 'filter data' and value['data']['data']['filter']['sourceInfoType'] == 'json data':
-                                        # print("hello data")
-                                        countdp+=1
-                                        if countdp == 1:
-                                            filter_result = find_key(fl1, key)
+                                    if value['data']['type'] == 'filter':
+                                        if value['data']['data']['filter']['sourceType'] == 'filter data' and value['data']['data']['filter']['sourceInfoType'] == 'json data':
+                                            countdp+=1
+                                            if countdp == 1:
+                                                filter_result = find_key(fl1, key)
 
-                                            if len(filter_result) !=0:
-                                                for path1, value1 in filter_result:
-                                                    print("nncnc path1", path1)
-                                                    # print("nncnc value1", value1)
-                                                    filter1Section = {}
-                                                    filter1Section["source"] = value1["source"]
-                                                    filter1Section["sourceKey"] = value1["sourceKey"]
-                                                    filter1Section["sourceData"] = FilterFunctionFlowChartFinal(value1["sourceData"], value['data']['data']['filter']["filterKey"], value['data']['data']['filter']["filterCon"], value['data']['data']['filter']["filterConValue"])
-                                                    fl2[dp[0]] = filter1Section
-                                                    dpkey=dp[0]
-                                        if countdp == 2:
-                                            filter_result2 = find_key(fl2, dpkey)
-                                            if len(filter_result2) !=0:
-                                                for path2, value2 in filter_result2:
-                                                    # print("nncnc path2", path2)
-                                                    # print("nncnc value['data']['data']['filter']['filterKey']", value['data']['data']['filter']["filterKey"])
-                                                    filter2Section = {}
-                                                    filter2Section["source"] = value2["source"]
-                                                    filter2Section["sourceKey"] = value2["sourceKey"]
-                                                    filter2Section["sourceData"] = FilterFunctionFlowChartFinal(value2["sourceData"], value['data']['data']['filter']["filterKey"], value['data']['data']['filter']["filterCon"], value['data']['data']['filter']["filterConValue"])
-                                                    fl3[dp[0]] = filter2Section
-                                                    dpkey=dp[0]
-                                
+                                                if len(filter_result) !=0:
+                                                    for path1, value1 in filter_result:
+                                                        filter1Section = {}
+                                                        filter1Section["source"] = value1["source"]
+                                                        filter1Section["sourceKey"] = value1["sourceKey"]
+                                                        filter1Section["sourceData"] = FilterFunctionFlowChartFinal(value1["sourceData"], value['data']['data']['filter']["filterKey"], value['data']['data']['filter']["filterCon"], value['data']['data']['filter']["filterConValue"])
+                                                        fl2[dp[0]] = filter1Section
+                                                        dpkey=dp[0]
+                                                        sourceKey = KeyFindOut(filter1Section["sourceData"][0])        
+
+                                            if countdp == 2:
+                                                filter_result2 = find_key(fl2, dpkey)
+                                                if len(filter_result2) !=0:
+                                                    for path2, value2 in filter_result2:
+                                                        filter2Section = {}
+                                                        filter2Section["source"] = value2["source"]
+                                                        filter2Section["sourceKey"] = value2["sourceKey"]
+                                                        filter2Section["sourceData"] = FilterFunctionFlowChartFinal(value2["sourceData"], value['data']['data']['filter']["filterKey"], value['data']['data']['filter']["filterCon"], value['data']['data']['filter']["filterConValue"])
+                                                        fl3[dp[0]] = filter2Section
+                                                        dpkey=dp[0]
+                                                        sourceKey = KeyFindOut(filter2Section["sourceData"][0])   
+
+                                        else:
+                                            print("filter")
+
+                                    elif value['data']['type'] == 'formula':
+                                        #formula 
+                                        # print("formula value['data']['data']", value['data']['data'])
+
+                                        if value['data']['data']['formula']['sourceType'] == 'formula data' and value['data']['data']['formula']['sourceInfoType'] == 'json data':
+                                            countdf+=1
+                                            if countdf ==1:
+                                                formula_result = find_key(fl1, key)
+
+                                                if len(formula_result) !=0:
+                                                    for path1, value1 in formula_result:
+                                                        formula1Section = {}
+                                                        formula1Section["source"] = value1["source"]
+                                                        formula1Section["sourceKey"] = value1["sourceKey"]
+                                                        # formula1Section["sourceData"] = FormulaFunctionFlowChartFinal(value1["sourceData"], value1["source"][0], value['data']['data']['formula']['formula'])
+                                                        formula1Section["sourceData"] = FormulaFunctionFlowChartFinal(value1["sourceData"], value['data']['data']['formula']['formula'])
+                                                        # print("formula1  value['data']['data']['formula']['formula']", value['data']['data']['formula']['formula'])
+                                                        fl2[dp[0]] = formula1Section
+                                                        dpkey=dp[0]
+                                                        sourceKey = KeyFindOut(formula1Section["sourceData"][0])   
+
+                                            if countdf == 2:
+                                                formula_result2 = find_key(fl2, key)
+
+                                                if len(formula_result2) !=0:
+                                                    for path2, value2 in formula_result2:
+                                                        formula2Section = {}
+                                                        formula2Section["source"] = value2["source"]
+                                                        formula2Section["sourceKey"] = value2["sourceKey"]
+                                                        formula2Section["sourceData"] = FormulaFunctionFlowChartFinal(value2["sourceData"], value['data']['data']['formula']['formula'])
+                                                        # print("formula1  value['data']['data']['formula']['formula']", value['data']['data']['formula']['formula'])
+                                                        fl3[dp[0]] = formula2Section
+                                                        dpkey=dp[0]
+                                                        sourceKey = KeyFindOut(formula2Section["sourceData"][0]) 
             
             if nd == "merge_data":
-                print("node_data[nd]", node_data[nd])
-                print("node_data[nd]['target']", node_data[nd]['target'])
+                # print("node_data[nd]", node_data[nd])
+                # print("node_data[nd]['target']", node_data[nd]['target'])
 
                 # join_depth = find_depth(node_data[nd]['target'])
                 # print("Join Depth of JSON:", join_depth)
@@ -5836,25 +5935,19 @@ def FlowChartData(node_data):
                                 # print("join_find_key_result[0][1][jk]['data']['data']['formula']", join_find_key_result[0][1][jk]['data']['data']['formula'])
                                 # print("join_find_key_result[0][1][jk]['data']['data']['formula']", len(join_find_key_result[0][1][jk]['data']['data']['formula']))
                                 # FormulaFunctionFlowChart()
-                                keyItem = []
-                                cnt = 0
+
                                 for key in fl4:
-                                    fl5[key] = FormulaFunctionFlowChartFinal(fl4[key], join_find_key_result[0][1][jk]['data']['data']['formula'])
-                                    cnt+=1
-                                    if cnt == 1:
-                                        for fk in fl5[key][0]:
-                                            # print("123 fk", fk)
-                                            keyItem.append(fk)
-                                # print("keyItem", keyItem)
-                                sourceKey = keyItem        
+                                    fl5[key] = FormulaFunctionFlowChartFinal(fl4[key], key, join_find_key_result[0][1][jk]['data']['data']['formula'])
+                                    sourceKey = KeyFindOut(fl5[key][0]) 
+                                         
                                 # print("formula_data", formula_data)
 
 
-                # if node_data[nd]['data']['type'] == 'filter' and node_data[nd]['data']['data']['filter']['sourceType'] == 'filter data' and node_data[nd]['data']['data']['filter']['sourceInfoType'] == 'json data':
-                #     for k in fl4:
-                #         # print("k", k)
-                #         # print("k", fl4[k])
-                #         fl5[k] = FilterFunctionFlowChartFinal(fl4[k], node_data[nd]['data']['data']['filter']["filterKey"], node_data[nd]['data']['data']['filter']["filterCon"], node_data[nd]['data']['data']['filter']["filterConValue"])
+            #     # if node_data[nd]['data']['type'] == 'filter' and node_data[nd]['data']['data']['filter']['sourceType'] == 'filter data' and node_data[nd]['data']['data']['filter']['sourceInfoType'] == 'json data':
+            #     #     for k in fl4:
+            #     #         # print("k", k)
+            #     #         # print("k", fl4[k])
+            #     #         fl5[k] = FilterFunctionFlowChartFinal(fl4[k], node_data[nd]['data']['data']['filter']["filterKey"], node_data[nd]['data']['data']['filter']["filterCon"], node_data[nd]['data']['data']['filter']["filterConValue"])
 
 
         # print("hello processType", processType)
