@@ -177,5 +177,10 @@ urlpatterns = [
     path('form-builder-data-save-api/', FormBuilderDataSaveAPI),
     path('get-dynamic-table-data-info-api/<int:table_id>/', GETDYNAMICTABLEDATAINFOPI),
     path('update-dynamic-table-data-info-api/', UPDATEDYNAMICTABLEDATAINFOPI),
+    path('database-connection-mysql/', DatabaseConnectionMySqlAPI),
+    path('page-delete-api/', PageDeleteAPI),
+    path('page-wise-data-show-api/<str:page_name>/', PageWiseDataShowAPI),
+    path('page-data-clear-api/<str:table_id>/<str:table_col_id>/', PageDataClearAPI),
+    path('page-delete-api/<str:table_id>/<str:table_col_id>/<str:page_name>/', PageDeleteAPI),
 
 ]
