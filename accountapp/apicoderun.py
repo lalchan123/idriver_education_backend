@@ -59,9 +59,10 @@ class ApiCodeRun:
                 print("item_arr_data", item_arr_data)
 
                 for m in item_arr_data:
+                    print("m['code']", m['code'])
                     loc = self.paramList
+                    print("64 loc", loc)
                     globals = eval(global_parameter)
                     exec(m['code'], globals, loc) 
-                    print("42")
                     self.api_code_result['result']=loc['result']
     

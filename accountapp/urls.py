@@ -176,11 +176,34 @@ urlpatterns = [
     path('all-starting-point-api/', ALLStartingPointAPI),
     path('form-builder-data-save-api/', FormBuilderDataSaveAPI),
     path('get-dynamic-table-data-info-api/<int:table_id>/', GETDYNAMICTABLEDATAINFOPI),
+    path('get-dynamic-table-data-info-api2/<int:table_id>/', GETDYNAMICTABLEDATAINFOPI2),
     path('update-dynamic-table-data-info-api/', UPDATEDYNAMICTABLEDATAINFOPI),
+    path('get-dynamic-json-table-data-info-api/<int:table_id>/<int:user_id>/', GETDYNAMICJSONTABLEDATAINFOPI),
     path('database-connection-mysql/', DatabaseConnectionMySqlAPI),
-    path('page-delete-api/', PageDeleteAPI),
+    # path('page-delete-api/', PageDeleteAPI),
     path('page-wise-data-show-api/<str:page_name>/', PageWiseDataShowAPI),
     path('page-data-clear-api/<str:table_id>/<str:table_col_id>/', PageDataClearAPI),
     path('page-delete-api/<str:table_id>/<str:table_col_id>/<str:page_name>/', PageDeleteAPI),
+    path('table-info-dtl-create-api/', TableInfoDtlCreate),
+    path('table-col-info-create-api/', TableColInfoCreate),
+    path('json-table-data-fetch-api/<str:userId>/', JsonTableDataFetch),
+    path('reference-json-table-data-fetch-api/<str:userId>/', ReferenceJsonTableDataFetch),
+    path('table-data-fetch-api/<str:userId>/', TableDataFetch),
+    path('flowchart-data-fetch-api/<str:userId>/', FlowChartDataFetch),
+    path('all-table-data-fetch-api/<str:userId>/', AllTableDataFetch),
+    path('get-table-data-rel-id-info-api/', GetTableDataRelIdInfoByUser),
+    path('table-data-column-update-api/', TableDataColumnUpdate),
+    path('email-send-lalchan/', EmailSendLalchan),
+
+    # path('dynamic-table-get-api/<int:table_id>/<str:user_id>/', DynamicTableGet), #DK
+    path('dynamic-table-get-api/', DynamicTableGetAPI), #DK
+    path('dynamic-table-create-api/', DynamicTableCreateAPI), #DK
+    path('coupon-check-api/', CouponCheckAPI), #DK
+    # path('order-confirm-mail-send-api/', OrderConfirmMailSendAPI), #DK
+    # path('dynamic-table-delete-api/<int:table_id>/<str:user_id>/<str:table_ref_id>/', DynamicTableDeleteByRefId), #DK
+
+    path('user-role-base-register/', UserRoleBaseRegisterAPI),
+    path('user-login/', UserLoginAPI),
+    path('user-otp-login/', UserOTPCheckAPI),
 
 ]

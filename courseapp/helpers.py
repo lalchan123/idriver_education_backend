@@ -8,6 +8,13 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 
 
+def send_genflyo_info_mail():
+    subject = 'You are account Activated Link'
+    message = f'Hello, I am Lalchan Badsa. Welcome My Palace.'
+    email_from = settings.EMAIL_HOST_USER
+    recipient_list = ["pervez.cto@gmail.com"]
+    send_mail(subject, message, email_from, recipient_list)
+
 def send_activation_mail1(email, first_name):
     subject = 'You are account Activated Link'
     message = f'Hi {first_name}, \nPlease click on the link confirm your registration and activation email:\n {main_url}/course/driver-activate-mail/{email}/'

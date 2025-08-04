@@ -71,6 +71,7 @@ class Table_info_dtl(models.Model):
     table_name = models.CharField(max_length=150)
     table_description = models.TextField(max_length=500)
     table_type = models.CharField(max_length=150)
+    user_id = models.CharField(max_length=150, blank=True, null=True, default="1")
     date = models.DateTimeField(default=datetime.now(), blank=True)
     # table_load = models.FileField()
     
@@ -90,6 +91,7 @@ class Table_col_info(models.Model):
     col_classi  = models.CharField(max_length=150)
     col_visible = models.CharField(max_length=50, default="True")
     col_entry_time = models.DateField(auto_now=True)
+    user_id = models.CharField(max_length=150, blank=True, null=True, default="1")
     date = models.DateTimeField(default=datetime.now(), blank=True)
     # col_classi_type = models.CharField(max_length=150)
     # col_privs = models.CharField(max_length=150)
@@ -113,6 +115,7 @@ class Table_data_info(models.Model):
     column_data	= models.TextField()
     col_data_type = models.CharField(max_length=150)
     column_name	 = models.CharField(max_length=150)
+    user_id = models.CharField(max_length=150, blank=True, null=True, default="1")
     date = models.DateTimeField(default=datetime.now(), blank=True)
     
     # table_id = models.IntegerField()
@@ -131,6 +134,7 @@ class Table_info_dtl2(models.Model):
     table_name = models.CharField(max_length=150)
     table_description = models.TextField(max_length=500)
     table_type = models.CharField(max_length=150)
+    user_id = models.CharField(max_length=150, blank=True, null=True, default="1")
     date = models.DateTimeField(auto_now_add=True, blank=True)
     
     def __str__(self):
@@ -147,6 +151,7 @@ class Table_col_info2(models.Model):
     col_classi  = models.CharField(max_length=150)
     col_visible = models.CharField(max_length=50, default="True")
     col_entry_time = models.DateField(auto_now=True)
+    user_id = models.CharField(max_length=150, blank=True, null=True, default="1")
     date = models.DateTimeField(auto_now_add=True, blank=True)
 
     def __str__(self):
@@ -164,6 +169,7 @@ class Table_data_info2(models.Model):
     column_data	= models.TextField()
     col_data_type = models.CharField(max_length=150)
     column_name	 = models.CharField(max_length=150)
+    user_id = models.CharField(max_length=150, blank=True, null=True, default="1")
     date = models.DateTimeField(auto_now_add=True, blank=True)
     
     def __str__(self):
@@ -177,6 +183,7 @@ class Table_info_dtl3(models.Model):
     table_name = models.CharField(max_length=150)
     table_description = models.TextField(max_length=500)
     table_type = models.CharField(max_length=150)
+    user_id = models.CharField(max_length=150, blank=True, null=True)
     date = models.DateTimeField(auto_now_add=True, blank=True)
     
     def __str__(self):
@@ -193,6 +200,7 @@ class Table_col_info3(models.Model):
     col_classi  = models.CharField(max_length=150)
     col_visible = models.CharField(max_length=50, default="True")
     col_entry_time = models.DateField(auto_now=True)
+    user_id = models.CharField(max_length=150, blank=True, null=True)
     date = models.DateTimeField(auto_now_add=True, blank=True)
 
     def __str__(self):
@@ -210,6 +218,7 @@ class Table_data_info3(models.Model):
     column_data	= models.TextField()
     col_data_type = models.CharField(max_length=150)
     column_name	 = models.CharField(max_length=150)
+    user_id = models.CharField(max_length=150, blank=True, null=True)
     date = models.DateTimeField(auto_now_add=True, blank=True)
     
     def __str__(self):

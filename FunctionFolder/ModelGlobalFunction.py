@@ -39,7 +39,7 @@ currenttimedate = datetime.fromtimestamp(
                 
 from accountapp.DynamicFunction.LinkedList import *
 from accountapp.DynamicFunction.JsonSelect import *                
-                
+from FunctionFolder.ModelGlobalFunction import *                
                 
                 
 def CurrentTimeFunc():
@@ -224,8 +224,7 @@ def DataFetch_Static(title, name, value_count, loadtime):
         currentdatetime = datetime.fromtimestamp(
                         currenttimestamp).strftime('%Y-%m-%d')
         
-        
-        fileName = f'/home/itbusaah/idriver_education_djangoproject/media/upload_file/json/datafetch_stat.json'
+        fileName = main_media_url+f'/media/upload_file/json/datafetch_stat.json'
         if os.path.isfile(fileName):
         
             def write_json1(new_data, filename=fileName):

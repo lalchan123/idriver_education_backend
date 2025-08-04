@@ -18,7 +18,7 @@ from pandas import *
 
 from courseapp.helpers import *
 from courseapp.send_mail import *
-
+from FunctionFolder.LogicalPart import *
 
 from django.db.models import Q
 
@@ -87,16 +87,35 @@ class TableInfoDtlType(DjangoObjectType):
     class Meta:
         model = Table_info_dtl
         fields = '__all__' 
+
+class TableInfoDtlType2(DjangoObjectType):
+    class Meta:
+        model = Table_info_dtl2
+        fields = '__all__' 
         
 class TableColInfoType(DjangoObjectType):
     class Meta:
         model = Table_col_info
+        fields = '__all__' 
+
+class TableColInfoType2(DjangoObjectType):
+    class Meta:
+        model = Table_col_info2
         fields = '__all__' 
                           
 class TableDataInfoType(DjangoObjectType):
     class Meta:
         model = Table_data_info
         fields = '__all__'  
+
+class TableDataInfoType2(DjangoObjectType):
+    class Meta:
+        model = Table_data_info2
+        fields = '__all__'  
+
+class TableDataInfoUnion(graphene.Union):
+    class Meta:
+        types = (TableDataInfoType, TableDataInfoType2)        
         
 class TableDataMdInfoType(DjangoObjectType):
     class Meta:
@@ -132,6 +151,23 @@ class GETJSONFILEType(DjangoObjectType):
     json_data = graphene.String()
     success_message = graphene.String()  
     error_message = graphene.String()
+
+class GETJSONFILEType(DjangoObjectType):
+    class Meta:
+        model = Table_data_info
+        fields = '__all__'
+    json_data = graphene.String()
+    success_message = graphene.String()  
+    error_message = graphene.String()
+
+class GETJSONFILEType2(DjangoObjectType):
+    class Meta:
+        model = Table_data_info2
+        fields = '__all__'
+    json_data = graphene.String()
+    success_message = graphene.String()  
+    error_message = graphene.String()
+
     
 class GETValidateType(DjangoObjectType):
     class Meta:
@@ -270,9 +306,11 @@ class Query(graphene.ObjectType):
     table_data_md = graphene.List(TableDataMdInfoType, table_id=graphene.Int(), col_id=graphene.Int(), column_data=graphene.String())
     get_table_data_info = graphene.List(TableDataInfoType, table_id=graphene.Int(), col_id=graphene.Int(), column_data=graphene.String())
     # get_table_data_rel_id_info = graphene.List(TableDataInfoType, table_id=graphene.Int(), table_col_id=graphene.Int(), tab_rel_id=graphene.String(), api_key=graphene.String(required=True))
-    get_table_data_rel_id_info = graphene.List(TableDataInfoType, table_id=graphene.Int(), table_col_id=graphene.Int(), tab_rel_id=graphene.String())
+    get_table_data_rel_id_info = graphene.List(TableDataInfoType, table_id=graphene.Int(), table_col_id=graphene.Int(), tab_rel_id=graphene.String(), user_id=graphene.String(required=True))
+    get_table_data_rel_id_info2 = graphene.List(TableDataInfoType2, table_id=graphene.Int(), table_col_id=graphene.Int(), tab_rel_id=graphene.String(), user_id=graphene.String(required=True))
     get_table_data_ref_id_info = graphene.List(TableDataInfoType, table_id=graphene.Int(), table_col_id=graphene.Int(), table_ref_id=graphene.String())
-    get_table_data_ref_id_info_update = graphene.List(TableDataInfoType, table_id=graphene.Int(), table_col_id=graphene.Int(), table_ref_id=graphene.Int())
+    get_table_data_ref_id_info_update = graphene.List(TableDataInfoType, table_id=graphene.Int(), table_col_id=graphene.Int(), table_ref_id=graphene.Int(), user_id=graphene.String(required=True))
+    get_table_data_ref_id_info_update2 = graphene.List(TableDataInfoType2, table_id=graphene.Int(), table_col_id=graphene.Int(), table_ref_id=graphene.Int(), user_id=graphene.String(required=True))
     
     get_table_data_json_info = graphene.Field(JsonDataInfoType)
     
@@ -359,13 +397,25 @@ class Query(graphene.ObjectType):
     
     get_yahoo_info_file_name = graphene.Field(GETJSONFILEType)
     get_yahoo_hist_file_name = graphene.Field(GETJSONFILEType)
+
+    get_all_json_table_name = graphene.Field(GETJSONFILEType, db=graphene.Int(required=True), user_id=graphene.String(required=True))
+    get_json_table_col_data = graphene.Field(GETJSONFILEType, db=graphene.Int(required=True), user_id=graphene.String(required=True), table_id=graphene.String(required=True))
+    get_table_data = graphene.Field(GETJSONFILEType, db=graphene.Int(required=True), user_id=graphene.String(required=True), table_id=graphene.String(required=True))
     
     
     get_json_data_merge = graphene.Field(GETJSONFILEType, api_key=graphene.String(), codeFile=graphene.String(), fileList=graphene.List(FileNameInput))
     
-    get_dynamic_table_field = graphene.Field(GETJSONFILEType, table_id=graphene.Int())
+    get_dynamic_table_field = graphene.Field(GETJSONFILEType, table_id=graphene.Int(), user_id=graphene.String(required=True))
+    get_dynamic_table_field2 = graphene.Field(GETJSONFILEType2, table_id=graphene.Int(), user_id=graphene.String(required=True))
+    get_dynamic_table_field_only_column1 = graphene.Field(GETJSONFILEType, table_id=graphene.Int())
+    get_dynamic_table_field_only_column2 = graphene.Field(GETJSONFILEType2, table_id=graphene.Int())
+    get_dynamic_json_table_field_only_column1 = graphene.Field(GETJSONFILEType2, table_id=graphene.Int())
+    get_dynamic_json_table_field_only_column2 = graphene.Field(GETJSONFILEType2, table_id=graphene.Int())
     get_dynamic_table_field_user = graphene.Field(GETJSONFILEType, table_id=graphene.Int(), user_id=graphene.String())
     get_all_table_column = graphene.Field(GETJSONFILEType)
+    get_all_table_column2 = graphene.Field(GETJSONFILEType2)
+    get_all_json_table_column = graphene.Field(GETJSONFILEType2)
+    get_all_json_table_column2 = graphene.Field(GETJSONFILEType2)
     
     
     get_dynamic_table_json_field = graphene.List(TableDataJsonDynamicInfoType, table_id=graphene.Int())
@@ -694,10 +744,141 @@ class Query(graphene.ObjectType):
         return sections_as_obj_list  
         
         
-    def resolve_get_dynamic_table_field(self, info, table_id):
+    def resolve_get_dynamic_table_field(self, info, table_id, user_id):
+        try:
+            if user_id =="0":
+                startTime = CurrentTimeFunc()
+                APICALLFUNCTION('get_dynamic_table_field', 'null')
+                sections = {}
+                items = []
+                refId = []
+                table_data = Table_data_info.objects.filter(table_id=table_id).order_by('-table_ref_id')
+                for k in table_data:
+                    refId.append(k.table_ref_id)
+                    
+                refId = list(set(refId))
+
+                for m in refId:
+                    for i in table_data:
+                        if i.table_ref_id==m:
+                            sections[i.column_name]=i.column_data
+                            sections['table_id']=i.table_id
+                            sections['table_ref_id']=i.table_ref_id
+                    if sections != "":
+                        items.append(sections)   
+                        sections = {}     
+
+
+                endTime = CurrentTimeFunc()
+                loadTime = (datetime.datetime.strptime(endTime, '%Y-%m-%d %H:%M:%S.%f') - datetime.datetime.strptime(startTime, '%Y-%m-%d %H:%M:%S.%f')).total_seconds() / 60
+                value_count = ValueCountFunc(items)
+                DataFetch_Static("get_dynamic_table_field", "model data", value_count, round(loadTime, 6))   
+                
+                return GETJSONFILEType(json_data=items) 
+            
+            else:
+                startTime = CurrentTimeFunc()
+                APICALLFUNCTION('get_dynamic_table_field', 'null')
+                sections = {}
+                items = []
+                refId = []
+                table_data = Table_data_info.objects.filter(table_id=table_id, user_id=user_id).order_by('-table_ref_id')
+                for k in table_data:
+                    refId.append(k.table_ref_id)
+                    
+                refId = list(set(refId))
+
+                for m in refId:
+                    for i in table_data:
+                        if i.table_ref_id==m:
+                            sections[i.column_name]=i.column_data
+                            sections['table_id']=i.table_id
+                            sections['table_ref_id']=i.table_ref_id
+                    if sections != "":
+                        items.append(sections)   
+                        sections = {}     
+
+
+                endTime = CurrentTimeFunc()
+                loadTime = (datetime.datetime.strptime(endTime, '%Y-%m-%d %H:%M:%S.%f') - datetime.datetime.strptime(startTime, '%Y-%m-%d %H:%M:%S.%f')).total_seconds() / 60
+                value_count = ValueCountFunc(items)
+                DataFetch_Static("get_dynamic_table_field", "model data", value_count, round(loadTime, 6))   
+                
+                return GETJSONFILEType(json_data=items) 
+            
+        except Table_data_info.DoesNotExist:
+            return None  
+    
+    
+    def resolve_get_dynamic_table_field2(self, info, table_id, user_id):
+        try:
+            if user_id =="0":
+                startTime = CurrentTimeFunc()
+                APICALLFUNCTION('get_dynamic_table_field2', 'null')
+                sections = {}
+                items = []
+                refId = []
+                table_data = Table_data_info2.objects.filter(table_id=table_id).order_by('-table_ref_id')
+                for k in table_data:
+                    refId.append(k.table_ref_id)
+                    
+                refId = list(set(refId))
+
+                for m in refId:
+                    for i in table_data:
+                        if i.table_ref_id==m:
+                            sections[i.column_name]=i.column_data
+                            sections['table_id']=i.table_id
+                            sections['table_ref_id']=i.table_ref_id
+                    if sections != "":
+                        items.append(sections)   
+                        sections = {}     
+
+
+                endTime = CurrentTimeFunc()
+                loadTime = (datetime.datetime.strptime(endTime, '%Y-%m-%d %H:%M:%S.%f') - datetime.datetime.strptime(startTime, '%Y-%m-%d %H:%M:%S.%f')).total_seconds() / 60
+                value_count = ValueCountFunc(items)
+                DataFetch_Static("get_dynamic_table_field2", "model data", value_count, round(loadTime, 6))   
+                
+                return GETJSONFILEType2(json_data=items) 
+            
+            else:
+                startTime = CurrentTimeFunc()
+                APICALLFUNCTION('get_dynamic_table_field2', 'null')
+                sections = {}
+                items = []
+                refId = []
+                table_data = Table_data_info2.objects.filter(table_id=table_id, user_id=user_id).order_by('-table_ref_id')
+                for k in table_data:
+                    refId.append(k.table_ref_id)
+                    
+                refId = list(set(refId))
+
+                for m in refId:
+                    for i in table_data:
+                        if i.table_ref_id==m:
+                            sections[i.column_name]=i.column_data
+                            sections['table_id']=i.table_id
+                            sections['table_ref_id']=i.table_ref_id
+                    if sections != "":
+                        items.append(sections)   
+                        sections = {}     
+
+
+                endTime = CurrentTimeFunc()
+                loadTime = (datetime.datetime.strptime(endTime, '%Y-%m-%d %H:%M:%S.%f') - datetime.datetime.strptime(startTime, '%Y-%m-%d %H:%M:%S.%f')).total_seconds() / 60
+                value_count = ValueCountFunc(items)
+                DataFetch_Static("get_dynamic_table_field2", "model data", value_count, round(loadTime, 6))   
+                
+                return GETJSONFILEType2(json_data=items) 
+            
+        except Table_data_info2.DoesNotExist:
+            return None  
+        
+    def resolve_get_dynamic_table_field_only_column1(self, info, table_id):
         try:
             startTime = CurrentTimeFunc()
-            APICALLFUNCTION('get_dynamic_table_field', 'null')
+            APICALLFUNCTION('get_dynamic_table_field_only_column1', 'null')
             sections = {}
             items = []
             refId = []
@@ -711,8 +892,8 @@ class Query(graphene.ObjectType):
                 for i in table_data:
                     if i.table_ref_id==m:
                         sections[i.column_name]=i.column_data
-                        sections['table_id']=i.table_id
-                        sections['table_ref_id']=i.table_ref_id
+                        # sections['table_id']=i.table_id
+                        # sections['table_ref_id']=i.table_ref_id
                 if sections != "":
                     items.append(sections)   
                     sections = {}     
@@ -721,10 +902,77 @@ class Query(graphene.ObjectType):
             endTime = CurrentTimeFunc()
             loadTime = (datetime.datetime.strptime(endTime, '%Y-%m-%d %H:%M:%S.%f') - datetime.datetime.strptime(startTime, '%Y-%m-%d %H:%M:%S.%f')).total_seconds() / 60
             value_count = ValueCountFunc(items)
-            DataFetch_Static("get_dynamic_table_field", "model data", value_count, round(loadTime, 6))   
+            DataFetch_Static("get_dynamic_table_field_only_column1", "model data", value_count, round(loadTime, 6))   
             
             return GETJSONFILEType(json_data=items) 
         except Table_data_info.DoesNotExist:
+            return None  
+    
+    
+    def resolve_get_dynamic_table_field_only_column2(self, info, table_id):
+        try:
+            startTime = CurrentTimeFunc()
+            APICALLFUNCTION('get_dynamic_table_field_only_column2', 'null')
+            sections = {}
+            items = []
+            refId = []
+            table_data = Table_data_info2.objects.filter(table_id=table_id).order_by('-table_ref_id')
+            for k in table_data:
+                refId.append(k.table_ref_id)
+                   
+            refId = list(set(refId))
+
+            for m in refId:
+                for i in table_data:
+                    if i.table_ref_id==m:
+                        sections[i.column_name]=i.column_data
+                        # sections['table_id']=i.table_id
+                        # sections['table_ref_id']=i.table_ref_id
+                if sections != "":
+                    items.append(sections)   
+                    sections = {}     
+
+
+            endTime = CurrentTimeFunc()
+            loadTime = (datetime.datetime.strptime(endTime, '%Y-%m-%d %H:%M:%S.%f') - datetime.datetime.strptime(startTime, '%Y-%m-%d %H:%M:%S.%f')).total_seconds() / 60
+            value_count = ValueCountFunc(items)
+            DataFetch_Static("get_dynamic_table_field_only_column2", "model data", value_count, round(loadTime, 6))   
+            
+            return GETJSONFILEType2(json_data=items) 
+        except Table_data_info2.DoesNotExist:
+            return None  
+        
+    def resolve_get_dynamic_json_table_field_only_column1(self, info, table_id):
+        try:
+            startTime = CurrentTimeFunc()
+            APICALLFUNCTION('get_dynamic_table_field_only_column2', 'null')
+            sections = {}
+            items = []
+            refId = []
+            table_data = Table_data_info2.objects.filter(table_id=table_id).order_by('-table_ref_id')
+            for k in table_data:
+                refId.append(k.table_ref_id)
+                   
+            refId = list(set(refId))
+
+            for m in refId:
+                for i in table_data:
+                    if i.table_ref_id==m:
+                        sections[i.column_name]=i.column_data
+                        # sections['table_id']=i.table_id
+                        # sections['table_ref_id']=i.table_ref_id
+                if sections != "":
+                    items.append(sections)   
+                    sections = {}     
+
+
+            endTime = CurrentTimeFunc()
+            loadTime = (datetime.datetime.strptime(endTime, '%Y-%m-%d %H:%M:%S.%f') - datetime.datetime.strptime(startTime, '%Y-%m-%d %H:%M:%S.%f')).total_seconds() / 60
+            value_count = ValueCountFunc(items)
+            DataFetch_Static("get_dynamic_table_field_only_column2", "model data", value_count, round(loadTime, 6))   
+            
+            return GETJSONFILEType2(json_data=items) 
+        except Table_data_info2.DoesNotExist:
             return None  
     
     
@@ -792,6 +1040,7 @@ class Query(graphene.ObjectType):
             for t in table_info:
                 tableSections['table']=t.table_name
                 tableSections['id']=t.table_id
+                tableSections['type']=t.table_type
 
                 table_col_info = Table_col_info.objects.filter(table_id=t.table_id)
                 for c in table_col_info:
@@ -813,6 +1062,179 @@ class Query(graphene.ObjectType):
             
             return GETJSONFILEType(json_data=tableItem) 
         except Table_data_info.DoesNotExist:
+            return None
+        
+    def resolve_get_all_table_column2(self, info):
+        try:
+            startTime = CurrentTimeFunc()
+            APICALLFUNCTION('get_all_table_column2', 'null')
+            tableItem = []
+            tableSections = {}
+            columnItem = []
+            columnSections = {}
+            table_info = Table_info_dtl2.objects.all().order_by('-table_id')
+            for t in table_info:
+                tableSections['table']=t.table_name
+                tableSections['id']=t.table_id
+                tableSections['type']=t.table_type
+
+                table_col_info = Table_col_info2.objects.filter(table_id=t.table_id)
+                for c in table_col_info:
+                    columnSections['no']=c.table_col_id
+                    columnSections['name']=c.column_name
+                    if len(columnSections)!=0:
+                        columnItem.append(columnSections)
+                        columnSections={}
+                tableSections['column']=columnItem       
+                if len(tableSections)!=0:
+                    tableItem.append(tableSections)
+                    tableSections={}
+                    columnItem=[]
+
+            TableInfoDtlfileName = main_media_url+f'/media/upload_file/user_data/table_info_dtl.json'
+            TableColInfofileName = main_media_url+f'/media/upload_file/user_data/table_col_info.json'
+
+
+            if os.path.isfile(TableInfoDtlfileName) and os.path.isfile(TableColInfofileName):
+                f = open(TableInfoDtlfileName)
+                json_data = json.load(f)
+                table_info_dtl_data = json_data['table_info_dtl']  
+                print("table_info_dtl_data", table_info_dtl_data)
+
+                f1 = open(TableColInfofileName)
+                json_data1 = json.load(f1)
+                table_col_info_data = json_data1['table_col_info']    
+                print("table_col_info_data", table_col_info_data)
+
+                for tid in table_info_dtl_data:
+                    print("tid", tid)
+                    tableSections['table']=tid['table_name']
+                    tableSections['id']=tid['table_id']
+                    tableSections['type']=tid['table_type']
+                    print("tableSections", tableSections)
+
+                    table_col_info_data_filter = [x for x in table_col_info_data if x['table_id'] == tid['table_id']]
+                    for cdf in table_col_info_data_filter:
+                        columnSections['no']=cdf['table_col_id']
+                        columnSections['name']=cdf['column_name']
+                        if len(columnSections)!=0:
+                            columnItem.append(columnSections)
+                            columnSections={}
+                    tableSections['column']=columnItem       
+                    if len(tableSections)!=0:
+                        tableItem.append(tableSections)
+                        tableSections={}
+                        columnItem=[]
+
+
+            endTime = CurrentTimeFunc()
+            loadTime = (datetime.datetime.strptime(endTime, '%Y-%m-%d %H:%M:%S.%f') - datetime.datetime.strptime(startTime, '%Y-%m-%d %H:%M:%S.%f')).total_seconds() / 60
+            value_count = ValueCountFunc(tableItem)
+            DataFetch_Static("get_all_table_column2", "model data", value_count, round(loadTime, 6)) 
+            
+            return GETJSONFILEType2(json_data=tableItem) 
+        except Table_data_info2.DoesNotExist:
+            return None
+
+
+    def resolve_get_all_json_table_column(self, info):
+        try:
+            startTime = CurrentTimeFunc()
+            APICALLFUNCTION('get_all_json_table_column', 'null')
+            tableItem = []
+            tableSections = {}
+            columnItem = []
+            columnSections = {}
+            
+            TableInfoDtlfileName = main_media_url+f'/media/upload_file/user_data/table_info_dtl.json'
+            TableColInfofileName = main_media_url+f'/media/upload_file/user_data/table_col_info.json'
+
+
+            if os.path.isfile(TableInfoDtlfileName) and os.path.isfile(TableColInfofileName):
+                f = open(TableInfoDtlfileName)
+                json_data = json.load(f)
+                table_info_dtl_data = json_data['table_info_dtl']  
+
+                f1 = open(TableColInfofileName)
+                json_data1 = json.load(f1)
+                table_col_info_data = json_data1['table_col_info']    
+
+                for tid in table_info_dtl_data:
+                    tableSections['table']=tid['table_name']
+                    tableSections['id']=tid['table_id']
+                    tableSections['type']=tid['table_type']
+
+                    table_col_info_data_filter = [x for x in table_col_info_data if x['table_id'] == tid['table_id']]
+                    for cdf in table_col_info_data_filter:
+                        columnSections['no']=cdf['table_col_id']
+                        columnSections['name']=cdf['column_name']
+                        if len(columnSections)!=0:
+                            columnItem.append(columnSections)
+                            columnSections={}
+                    tableSections['column']=columnItem       
+                    if len(tableSections)!=0:
+                        tableItem.append(tableSections)
+                        tableSections={}
+                        columnItem=[]
+
+
+            endTime = CurrentTimeFunc()
+            loadTime = (datetime.datetime.strptime(endTime, '%Y-%m-%d %H:%M:%S.%f') - datetime.datetime.strptime(startTime, '%Y-%m-%d %H:%M:%S.%f')).total_seconds() / 60
+            value_count = ValueCountFunc(tableItem)
+            DataFetch_Static("get_all_json_table_column", "json data", value_count, round(loadTime, 6)) 
+            
+            return GETJSONFILEType2(json_data=tableItem) 
+        except Table_data_info2.DoesNotExist:
+            return None
+        
+    def resolve_get_all_json_table_column2(self, info):
+        try:
+            startTime = CurrentTimeFunc()
+            APICALLFUNCTION('get_all_json_table_column2', 'null')
+            tableItem = []
+            tableSections = {}
+            columnItem = []
+            columnSections = {}
+            
+            TableInfoDtlfileName = main_media_url+f'/media/upload_file/user_data/table_info_dtl2.json'
+            TableColInfofileName = main_media_url+f'/media/upload_file/user_data/table_col_info2.json'
+
+
+            if os.path.isfile(TableInfoDtlfileName) and os.path.isfile(TableColInfofileName):
+                f = open(TableInfoDtlfileName)
+                json_data = json.load(f)
+                table_info_dtl_data = json_data['table_info_dtl']  
+
+                f1 = open(TableColInfofileName)
+                json_data1 = json.load(f1)
+                table_col_info_data = json_data1['table_col_info']    
+
+                for tid in table_info_dtl_data:
+                    tableSections['table']=tid['table_name']
+                    tableSections['id']=tid['table_id']
+                    tableSections['type']=tid['table_type']
+
+                    table_col_info_data_filter = [x for x in table_col_info_data if x['table_id'] == tid['table_id']]
+                    for cdf in table_col_info_data_filter:
+                        columnSections['no']=cdf['table_col_id']
+                        columnSections['name']=cdf['column_name']
+                        if len(columnSections)!=0:
+                            columnItem.append(columnSections)
+                            columnSections={}
+                    tableSections['column']=columnItem       
+                    if len(tableSections)!=0:
+                        tableItem.append(tableSections)
+                        tableSections={}
+                        columnItem=[]
+
+
+            endTime = CurrentTimeFunc()
+            loadTime = (datetime.datetime.strptime(endTime, '%Y-%m-%d %H:%M:%S.%f') - datetime.datetime.strptime(startTime, '%Y-%m-%d %H:%M:%S.%f')).total_seconds() / 60
+            value_count = ValueCountFunc(tableItem)
+            DataFetch_Static("get_all_json_table_column2", "json data", value_count, round(loadTime, 6)) 
+            
+            return GETJSONFILEType2(json_data=tableItem) 
+        except Table_data_info2.DoesNotExist:
             return None
     
         
@@ -966,45 +1388,155 @@ class Query(graphene.ObjectType):
         except Table_data_info.DoesNotExist:
             return None
             
-    def resolve_get_table_data_rel_id_info(self, info, table_id, table_col_id, tab_rel_id):
+    def resolve_get_table_data_rel_id_info(self, info, table_id, table_col_id, tab_rel_id, user_id):
         try:
             # result, message = UserLogin(api_key, "get_table_data_rel_id_info")
             # print("973 message", result, message)
             # if result == True:
-            startTime = CurrentTimeFunc()
-            APICALLFUNCTION('get_table_data_rel_id_info', 'null')
-            if table_col_id==0 and tab_rel_id=="":
-                data = Table_data_info.objects.filter(table_id=table_id)
+            if user_id != "0":
+                startTime = CurrentTimeFunc()
+                APICALLFUNCTION('get_table_data_rel_id_info', 'null')
+                if table_col_id==0 and tab_rel_id=="":
+                    data = Table_data_info.objects.filter(table_id=table_id, user_id=user_id)
+                    endTime = CurrentTimeFunc()
+                    loadTime = (datetime.datetime.strptime(endTime, '%Y-%m-%d %H:%M:%S.%f') - datetime.datetime.strptime(startTime, '%Y-%m-%d %H:%M:%S.%f')).total_seconds() / 60
+                    value_count = ValueCountFunc(data)
+                    DataFetch_Static("get_table_data_rel_id_info", "model data", value_count, round(loadTime, 6))	
+                    return data
+                elif tab_rel_id=="":
+                    data = Table_data_info.objects.filter(table_id=table_id, table_col_id=table_col_id, user_id=user_id)
+                    endTime = CurrentTimeFunc()
+                    loadTime = (datetime.datetime.strptime(endTime, '%Y-%m-%d %H:%M:%S.%f') - datetime.datetime.strptime(startTime, '%Y-%m-%d %H:%M:%S.%f')).total_seconds() / 60
+                    value_count = ValueCountFunc(data)
+                    DataFetch_Static("get_table_data_rel_id_info", "model data", value_count, round(loadTime, 6))
+                    return data
+                elif table_col_id==0:
+                    data = Table_data_info.objects.filter(table_id=table_id, tab_rel_id=tab_rel_id, user_id=user_id)
+                    endTime = CurrentTimeFunc()
+                    loadTime = (datetime.datetime.strptime(endTime, '%Y-%m-%d %H:%M:%S.%f') - datetime.datetime.strptime(startTime, '%Y-%m-%d %H:%M:%S.%f')).total_seconds() / 60
+                    value_count = ValueCountFunc(data)
+                    DataFetch_Static("get_table_data_rel_id_info", "model data", value_count, round(loadTime, 6))
+                    return data
+                        
+                data = Table_data_info.objects.filter(table_id=table_id, table_col_id=table_col_id, tab_rel_id=tab_rel_id, user_id=user_id)
                 endTime = CurrentTimeFunc()
                 loadTime = (datetime.datetime.strptime(endTime, '%Y-%m-%d %H:%M:%S.%f') - datetime.datetime.strptime(startTime, '%Y-%m-%d %H:%M:%S.%f')).total_seconds() / 60
                 value_count = ValueCountFunc(data)
-                DataFetch_Static("get_table_data_rel_id_info", "model data", value_count, round(loadTime, 6))	
+                DataFetch_Static("get_table_data_rel_id_info", "model data", value_count, round(loadTime, 6))    
                 return data
-            elif tab_rel_id=="":
-                data = Table_data_info.objects.filter(table_id=table_id, table_col_id=table_col_id)
+            
+            else:
+                startTime = CurrentTimeFunc()
+                APICALLFUNCTION('get_table_data_rel_id_info', 'null')
+                if table_col_id==0 and tab_rel_id=="":
+                    data = Table_data_info.objects.filter(table_id=table_id)
+                    endTime = CurrentTimeFunc()
+                    loadTime = (datetime.datetime.strptime(endTime, '%Y-%m-%d %H:%M:%S.%f') - datetime.datetime.strptime(startTime, '%Y-%m-%d %H:%M:%S.%f')).total_seconds() / 60
+                    value_count = ValueCountFunc(data)
+                    DataFetch_Static("get_table_data_rel_id_info", "model data", value_count, round(loadTime, 6))	
+                    return data
+                elif tab_rel_id=="":
+                    data = Table_data_info.objects.filter(table_id=table_id, table_col_id=table_col_id)
+                    endTime = CurrentTimeFunc()
+                    loadTime = (datetime.datetime.strptime(endTime, '%Y-%m-%d %H:%M:%S.%f') - datetime.datetime.strptime(startTime, '%Y-%m-%d %H:%M:%S.%f')).total_seconds() / 60
+                    value_count = ValueCountFunc(data)
+                    DataFetch_Static("get_table_data_rel_id_info", "model data", value_count, round(loadTime, 6))
+                    return data
+                elif table_col_id==0:
+                    data = Table_data_info.objects.filter(table_id=table_id, tab_rel_id=tab_rel_id)
+                    endTime = CurrentTimeFunc()
+                    loadTime = (datetime.datetime.strptime(endTime, '%Y-%m-%d %H:%M:%S.%f') - datetime.datetime.strptime(startTime, '%Y-%m-%d %H:%M:%S.%f')).total_seconds() / 60
+                    value_count = ValueCountFunc(data)
+                    DataFetch_Static("get_table_data_rel_id_info", "model data", value_count, round(loadTime, 6))
+                    return data
+                        
+                data = Table_data_info.objects.filter(table_id=table_id, table_col_id=table_col_id, tab_rel_id=tab_rel_id)
                 endTime = CurrentTimeFunc()
                 loadTime = (datetime.datetime.strptime(endTime, '%Y-%m-%d %H:%M:%S.%f') - datetime.datetime.strptime(startTime, '%Y-%m-%d %H:%M:%S.%f')).total_seconds() / 60
                 value_count = ValueCountFunc(data)
-                DataFetch_Static("get_table_data_rel_id_info", "model data", value_count, round(loadTime, 6))
+                DataFetch_Static("get_table_data_rel_id_info", "model data", value_count, round(loadTime, 6))    
                 return data
-            elif table_col_id==0:
-                data = Table_data_info.objects.filter(table_id=table_id, tab_rel_id=tab_rel_id)
-                endTime = CurrentTimeFunc()
-                loadTime = (datetime.datetime.strptime(endTime, '%Y-%m-%d %H:%M:%S.%f') - datetime.datetime.strptime(startTime, '%Y-%m-%d %H:%M:%S.%f')).total_seconds() / 60
-                value_count = ValueCountFunc(data)
-                DataFetch_Static("get_table_data_rel_id_info", "model data", value_count, round(loadTime, 6))
-                return data
-                    
-            data = Table_data_info.objects.filter(table_id=table_id, table_col_id=table_col_id, tab_rel_id=tab_rel_id)
-            endTime = CurrentTimeFunc()
-            loadTime = (datetime.datetime.strptime(endTime, '%Y-%m-%d %H:%M:%S.%f') - datetime.datetime.strptime(startTime, '%Y-%m-%d %H:%M:%S.%f')).total_seconds() / 60
-            value_count = ValueCountFunc(data)
-            DataFetch_Static("get_table_data_rel_id_info", "model data", value_count, round(loadTime, 6))    
-            return data
+            
             # else:
             #     # return TableDataInfoType(message=message)
             #     raise GraphQLError(message)    
         except Table_data_info.DoesNotExist:
+            #  raise GraphQLError("Something error")  
+            return None
+        
+    def resolve_get_table_data_rel_id_info2(self, info, table_id, table_col_id, tab_rel_id, user_id):
+        try:
+            # result, message = UserLogin(api_key, "get_table_data_rel_id_info")
+            # print("973 message", result, message)
+            # if result == True:
+            if user_id != "0":
+                startTime = CurrentTimeFunc()
+                APICALLFUNCTION('get_table_data_rel_id_info2', 'null')
+                if table_col_id==0 and tab_rel_id=="":
+                    data = Table_data_info2.objects.filter(table_id=table_id, user_id=user_id)
+                    endTime = CurrentTimeFunc()
+                    loadTime = (datetime.datetime.strptime(endTime, '%Y-%m-%d %H:%M:%S.%f') - datetime.datetime.strptime(startTime, '%Y-%m-%d %H:%M:%S.%f')).total_seconds() / 60
+                    value_count = ValueCountFunc(data)
+                    DataFetch_Static("get_table_data_rel_id_info2", "model data", value_count, round(loadTime, 6))	
+                    return data
+                elif tab_rel_id=="":
+                    data = Table_data_info2.objects.filter(table_id=table_id, table_col_id=table_col_id, user_id=user_id)
+                    endTime = CurrentTimeFunc()
+                    loadTime = (datetime.datetime.strptime(endTime, '%Y-%m-%d %H:%M:%S.%f') - datetime.datetime.strptime(startTime, '%Y-%m-%d %H:%M:%S.%f')).total_seconds() / 60
+                    value_count = ValueCountFunc(data)
+                    DataFetch_Static("get_table_data_rel_id_info2", "model data", value_count, round(loadTime, 6))
+                    return data
+                elif table_col_id==0:
+                    data = Table_data_info2.objects.filter(table_id=table_id, tab_rel_id=tab_rel_id, user_id=user_id)
+                    endTime = CurrentTimeFunc()
+                    loadTime = (datetime.datetime.strptime(endTime, '%Y-%m-%d %H:%M:%S.%f') - datetime.datetime.strptime(startTime, '%Y-%m-%d %H:%M:%S.%f')).total_seconds() / 60
+                    value_count = ValueCountFunc(data)
+                    DataFetch_Static("get_table_data_rel_id_info2", "model data", value_count, round(loadTime, 6))
+                    return data
+                        
+                data = Table_data_info2.objects.filter(table_id=table_id, table_col_id=table_col_id, tab_rel_id=tab_rel_id, user_id=user_id)
+                endTime = CurrentTimeFunc()
+                loadTime = (datetime.datetime.strptime(endTime, '%Y-%m-%d %H:%M:%S.%f') - datetime.datetime.strptime(startTime, '%Y-%m-%d %H:%M:%S.%f')).total_seconds() / 60
+                value_count = ValueCountFunc(data)
+                DataFetch_Static("get_table_data_rel_id_info2", "model data", value_count, round(loadTime, 6))    
+                return data
+            
+            else:
+                startTime = CurrentTimeFunc()
+                APICALLFUNCTION('get_table_data_rel_id_info2', 'null')
+                if table_col_id==0 and tab_rel_id=="":
+                    data = Table_data_info2.objects.filter(table_id=table_id)
+                    endTime = CurrentTimeFunc()
+                    loadTime = (datetime.datetime.strptime(endTime, '%Y-%m-%d %H:%M:%S.%f') - datetime.datetime.strptime(startTime, '%Y-%m-%d %H:%M:%S.%f')).total_seconds() / 60
+                    value_count = ValueCountFunc(data)
+                    DataFetch_Static("get_table_data_rel_id_info2", "model data", value_count, round(loadTime, 6))	
+                    return data
+                elif tab_rel_id=="":
+                    data = Table_data_info2.objects.filter(table_id=table_id, table_col_id=table_col_id)
+                    endTime = CurrentTimeFunc()
+                    loadTime = (datetime.datetime.strptime(endTime, '%Y-%m-%d %H:%M:%S.%f') - datetime.datetime.strptime(startTime, '%Y-%m-%d %H:%M:%S.%f')).total_seconds() / 60
+                    value_count = ValueCountFunc(data)
+                    DataFetch_Static("get_table_data_rel_id_info2", "model data", value_count, round(loadTime, 6))
+                    return data
+                elif table_col_id==0:
+                    data = Table_data_info2.objects.filter(table_id=table_id, tab_rel_id=tab_rel_id)
+                    endTime = CurrentTimeFunc()
+                    loadTime = (datetime.datetime.strptime(endTime, '%Y-%m-%d %H:%M:%S.%f') - datetime.datetime.strptime(startTime, '%Y-%m-%d %H:%M:%S.%f')).total_seconds() / 60
+                    value_count = ValueCountFunc(data)
+                    DataFetch_Static("get_table_data_rel_id_info2", "model data", value_count, round(loadTime, 6))
+                    return data
+                        
+                data = Table_data_info2.objects.filter(table_id=table_id, table_col_id=table_col_id, tab_rel_id=tab_rel_id)
+                endTime = CurrentTimeFunc()
+                loadTime = (datetime.datetime.strptime(endTime, '%Y-%m-%d %H:%M:%S.%f') - datetime.datetime.strptime(startTime, '%Y-%m-%d %H:%M:%S.%f')).total_seconds() / 60
+                value_count = ValueCountFunc(data)
+                DataFetch_Static("get_table_data_rel_id_info2", "model data", value_count, round(loadTime, 6))    
+                return data
+            
+            # else:
+            #     # return TableDataInfoType(message=message)
+            #     raise GraphQLError(message)    
+        except Table_data_info2.DoesNotExist:
             #  raise GraphQLError("Something error")  
             return None
     
@@ -1223,44 +1755,162 @@ class Query(graphene.ObjectType):
             return data
         except Table_data_info.DoesNotExist:
             return None
-    def resolve_get_table_data_ref_id_info_update(self, info, table_id, table_col_id, table_ref_id):
+        
+    def resolve_get_table_data_ref_id_info_update(self, info, table_id, table_col_id, table_ref_id, user_id):
         try:
-            startTime = CurrentTimeFunc()
-            APICALLFUNCTION('get_table_data_ref_id_info_update', 'null')
-            if table_id and table_col_id==0 and table_ref_id==0:
-                data = Table_data_info.objects.filter(table_id=table_id).order_by('-table_col_id')
-            
-                endTime = CurrentTimeFunc()
-                loadTime = (datetime.datetime.strptime(endTime, '%Y-%m-%d %H:%M:%S.%f') - datetime.datetime.strptime(startTime, '%Y-%m-%d %H:%M:%S.%f')).total_seconds() / 60
-                value_count = ValueCountFunc(data)
-                DataFetch_Static("get_table_data_ref_id_info_update", "model data", value_count, round(loadTime, 6))
+            if user_id !="0":
+                startTime = CurrentTimeFunc()
+                APICALLFUNCTION('get_table_data_ref_id_info_update', 'null')
+                if table_id and table_col_id==0 and table_ref_id==0:
+                    data = Table_data_info.objects.filter(table_id=table_id, user_id=user_id).order_by('-table_col_id')
+                    
+                    endTime = CurrentTimeFunc()
+                    loadTime = (datetime.datetime.strptime(endTime, '%Y-%m-%d %H:%M:%S.%f') - datetime.datetime.strptime(startTime, '%Y-%m-%d %H:%M:%S.%f')).total_seconds() / 60
+                    value_count = ValueCountFunc(data)
+                    DataFetch_Static("get_table_data_ref_id_info_update", "model data", value_count, round(loadTime, 6))
+                        
+                    return data
+                if table_id and table_col_id==0 and table_ref_id!=0:
+                    data = Table_data_info.objects.filter(table_id=table_id, table_ref_id=table_ref_id, user_id=user_id).order_by('-table_col_id')
+                    
+                    endTime = CurrentTimeFunc()
+                    loadTime = (datetime.datetime.strptime(endTime, '%Y-%m-%d %H:%M:%S.%f') - datetime.datetime.strptime(startTime, '%Y-%m-%d %H:%M:%S.%f')).total_seconds() / 60
+                    value_count = ValueCountFunc(data)
+                    DataFetch_Static("get_table_data_ref_id_info_update", "model data", value_count, round(loadTime, 6))
+                    return data
                 
-                return data
-            if table_id and table_col_id==0 and table_ref_id!=0:
-                data = Table_data_info.objects.filter(table_id=table_id, table_ref_id=table_ref_id).order_by('-table_col_id')
-            
+                if table_id and table_col_id and table_ref_id==0:
+                    data = Table_data_info.objects.filter(table_id=table_id, table_col_id=table_col_id, user_id=user_id).order_by('-table_col_id')
+                    
+                    endTime = CurrentTimeFunc()
+                    loadTime = (datetime.datetime.strptime(endTime, '%Y-%m-%d %H:%M:%S.%f') - datetime.datetime.strptime(startTime, '%Y-%m-%d %H:%M:%S.%f')).total_seconds() / 60
+                    value_count = ValueCountFunc(data)
+                    DataFetch_Static("get_table_data_ref_id_info_update", "model data", value_count, round(loadTime, 6))
+                    return data
+                        
+                data = Table_data_info.objects.filter(table_id=table_id, table_col_id=table_col_id, table_ref_id=table_ref_id, user_id=user_id).order_by('-table_col_id')
+                    
                 endTime = CurrentTimeFunc()
                 loadTime = (datetime.datetime.strptime(endTime, '%Y-%m-%d %H:%M:%S.%f') - datetime.datetime.strptime(startTime, '%Y-%m-%d %H:%M:%S.%f')).total_seconds() / 60
                 value_count = ValueCountFunc(data)
-                DataFetch_Static("get_table_data_ref_id_info_update", "model data", value_count, round(loadTime, 6))
+                DataFetch_Static("get_table_data_ref_id_info_update", "model data", value_count, round(loadTime, 6))    
                 return data
-            if table_id and table_col_id and table_ref_id==0:
-                data = Table_data_info.objects.filter(table_id=table_id, table_col_id=table_col_id).order_by('-table_col_id')
             
-                endTime = CurrentTimeFunc()
-                loadTime = (datetime.datetime.strptime(endTime, '%Y-%m-%d %H:%M:%S.%f') - datetime.datetime.strptime(startTime, '%Y-%m-%d %H:%M:%S.%f')).total_seconds() / 60
-                value_count = ValueCountFunc(data)
-                DataFetch_Static("get_table_data_ref_id_info_update", "model data", value_count, round(loadTime, 6))
-                return data
+            elif user_id == "0":
+                startTime = CurrentTimeFunc()
+                APICALLFUNCTION('get_table_data_ref_id_info_update', 'null')
+                if table_id and table_col_id==0 and table_ref_id==0:
+                    data = Table_data_info.objects.filter(table_id=table_id, user_id=user_id).order_by('-table_col_id')
+                    
+                    endTime = CurrentTimeFunc()
+                    loadTime = (datetime.datetime.strptime(endTime, '%Y-%m-%d %H:%M:%S.%f') - datetime.datetime.strptime(startTime, '%Y-%m-%d %H:%M:%S.%f')).total_seconds() / 60
+                    value_count = ValueCountFunc(data)
+                    DataFetch_Static("get_table_data_ref_id_info_update", "model data", value_count, round(loadTime, 6))
+                        
+                    return data
+                if table_id and table_col_id==0 and table_ref_id!=0:
+                    data = Table_data_info.objects.filter(table_id=table_id, table_ref_id=table_ref_id, user_id=user_id).order_by('-table_col_id')
+                    
+                    endTime = CurrentTimeFunc()
+                    loadTime = (datetime.datetime.strptime(endTime, '%Y-%m-%d %H:%M:%S.%f') - datetime.datetime.strptime(startTime, '%Y-%m-%d %H:%M:%S.%f')).total_seconds() / 60
+                    value_count = ValueCountFunc(data)
+                    DataFetch_Static("get_table_data_ref_id_info_update", "model data", value_count, round(loadTime, 6))
+                    return data
                 
-            data = Table_data_info.objects.filter(table_id=table_id, table_col_id=table_col_id, table_ref_id=table_ref_id).order_by('-table_col_id')
+                if table_id and table_col_id and table_ref_id==0:
+                    data = Table_data_info.objects.filter(table_id=table_id, table_col_id=table_col_id, user_id=user_id).order_by('-table_col_id')
+                    
+                    endTime = CurrentTimeFunc()
+                    loadTime = (datetime.datetime.strptime(endTime, '%Y-%m-%d %H:%M:%S.%f') - datetime.datetime.strptime(startTime, '%Y-%m-%d %H:%M:%S.%f')).total_seconds() / 60
+                    value_count = ValueCountFunc(data)
+                    DataFetch_Static("get_table_data_ref_id_info_update", "model data", value_count, round(loadTime, 6))
+                    return data
+                        
+                data = Table_data_info.objects.filter(table_id=table_id, table_col_id=table_col_id, table_ref_id=table_ref_id, user_id=user_id).order_by('-table_col_id')
+                    
+                endTime = CurrentTimeFunc()
+                loadTime = (datetime.datetime.strptime(endTime, '%Y-%m-%d %H:%M:%S.%f') - datetime.datetime.strptime(startTime, '%Y-%m-%d %H:%M:%S.%f')).total_seconds() / 60
+                value_count = ValueCountFunc(data)
+                DataFetch_Static("get_table_data_ref_id_info_update", "model data", value_count, round(loadTime, 6))    
+                return data
             
-            endTime = CurrentTimeFunc()
-            loadTime = (datetime.datetime.strptime(endTime, '%Y-%m-%d %H:%M:%S.%f') - datetime.datetime.strptime(startTime, '%Y-%m-%d %H:%M:%S.%f')).total_seconds() / 60
-            value_count = ValueCountFunc(data)
-            DataFetch_Static("get_table_data_ref_id_info_update", "model data", value_count, round(loadTime, 6))    
-            return data
         except Table_data_info.DoesNotExist:
+            return None
+
+
+    def resolve_get_table_data_ref_id_info_update2(self, info, table_id, table_col_id, table_ref_id, user_id):
+        try:
+            if user_id != "0":
+                startTime = CurrentTimeFunc()
+                APICALLFUNCTION('get_table_data_ref_id_info_update2', 'null')
+                if table_id and table_col_id==0 and table_ref_id==0:
+                    data = Table_data_info2.objects.filter(table_id=table_id, user_id=user_id).order_by('-table_col_id')
+                    
+                    endTime = CurrentTimeFunc()
+                    loadTime = (datetime.datetime.strptime(endTime, '%Y-%m-%d %H:%M:%S.%f') - datetime.datetime.strptime(startTime, '%Y-%m-%d %H:%M:%S.%f')).total_seconds() / 60
+                    value_count = ValueCountFunc(data)
+                    DataFetch_Static("get_table_data_ref_id_info_update2", "model data", value_count, round(loadTime, 6))
+                    return data
+                
+                if table_id and table_col_id==0 and table_ref_id!=0:
+                    data = Table_data_info2.objects.filter(table_id=table_id, table_ref_id=table_ref_id, user_id=user_id).order_by('-table_col_id')
+                    endTime = CurrentTimeFunc()
+                    loadTime = (datetime.datetime.strptime(endTime, '%Y-%m-%d %H:%M:%S.%f') - datetime.datetime.strptime(startTime, '%Y-%m-%d %H:%M:%S.%f')).total_seconds() / 60
+                    value_count = ValueCountFunc(data)
+                    DataFetch_Static("get_table_data_ref_id_info_update2", "model data", value_count, round(loadTime, 6))
+                    return data
+                if table_id and table_col_id and table_ref_id==0:
+                    data = Table_data_info2.objects.filter(table_id=table_id, table_col_id=table_col_id, user_id=user_id).order_by('-table_col_id')
+                    endTime = CurrentTimeFunc()
+                    loadTime = (datetime.datetime.strptime(endTime, '%Y-%m-%d %H:%M:%S.%f') - datetime.datetime.strptime(startTime, '%Y-%m-%d %H:%M:%S.%f')).total_seconds() / 60
+                    value_count = ValueCountFunc(data)
+                    DataFetch_Static("get_table_data_ref_id_info_update2", "model data", value_count, round(loadTime, 6))
+                    return data
+                        
+                data = Table_data_info2.objects.filter(table_id=table_id, table_col_id=table_col_id, table_ref_id=table_ref_id, user_id=user_id).order_by('-table_col_id')
+                    
+                endTime = CurrentTimeFunc()
+                loadTime = (datetime.datetime.strptime(endTime, '%Y-%m-%d %H:%M:%S.%f') - datetime.datetime.strptime(startTime, '%Y-%m-%d %H:%M:%S.%f')).total_seconds() / 60
+                value_count = ValueCountFunc(data)
+                DataFetch_Static("get_table_data_ref_id_info_update2", "model data", value_count, round(loadTime, 6))    
+                return data
+            
+            elif user_id == "0":
+                startTime = CurrentTimeFunc()
+                APICALLFUNCTION('get_table_data_ref_id_info_update2', 'null')
+                if table_id and table_col_id==0 and table_ref_id==0:
+                    data = Table_data_info2.objects.filter(table_id=table_id).order_by('-table_col_id')
+                    
+                    endTime = CurrentTimeFunc()
+                    loadTime = (datetime.datetime.strptime(endTime, '%Y-%m-%d %H:%M:%S.%f') - datetime.datetime.strptime(startTime, '%Y-%m-%d %H:%M:%S.%f')).total_seconds() / 60
+                    value_count = ValueCountFunc(data)
+                    DataFetch_Static("get_table_data_ref_id_info_update2", "model data", value_count, round(loadTime, 6))
+                    return data
+                
+                if table_id and table_col_id==0 and table_ref_id!=0:
+                    data = Table_data_info2.objects.filter(table_id=table_id, table_ref_id=table_ref_id).order_by('-table_col_id')
+                    endTime = CurrentTimeFunc()
+                    loadTime = (datetime.datetime.strptime(endTime, '%Y-%m-%d %H:%M:%S.%f') - datetime.datetime.strptime(startTime, '%Y-%m-%d %H:%M:%S.%f')).total_seconds() / 60
+                    value_count = ValueCountFunc(data)
+                    DataFetch_Static("get_table_data_ref_id_info_update2", "model data", value_count, round(loadTime, 6))
+                    return data
+                if table_id and table_col_id and table_ref_id==0:
+                    data = Table_data_info2.objects.filter(table_id=table_id, table_col_id=table_col_id).order_by('-table_col_id')
+                    endTime = CurrentTimeFunc()
+                    loadTime = (datetime.datetime.strptime(endTime, '%Y-%m-%d %H:%M:%S.%f') - datetime.datetime.strptime(startTime, '%Y-%m-%d %H:%M:%S.%f')).total_seconds() / 60
+                    value_count = ValueCountFunc(data)
+                    DataFetch_Static("get_table_data_ref_id_info_update2", "model data", value_count, round(loadTime, 6))
+                    return data
+                        
+                data = Table_data_info2.objects.filter(table_id=table_id, table_col_id=table_col_id, table_ref_id=table_ref_id).order_by('-table_col_id')
+                    
+                endTime = CurrentTimeFunc()
+                loadTime = (datetime.datetime.strptime(endTime, '%Y-%m-%d %H:%M:%S.%f') - datetime.datetime.strptime(startTime, '%Y-%m-%d %H:%M:%S.%f')).total_seconds() / 60
+                value_count = ValueCountFunc(data)
+                DataFetch_Static("get_table_data_ref_id_info_update2", "model data", value_count, round(loadTime, 6))    
+                return data
+        
+        except Table_data_info2.DoesNotExist:
             return None
                     
     def resolve_userdetails_table_data_info(self, info):
@@ -2735,7 +3385,160 @@ class Query(graphene.ObjectType):
             DataFetch_Static("get_yahoo_hist_file_name", "json data", value_count, round(loadTime, 6))
             return GETJSONFILEType(json_data=dir_list)
         except Table_data_info.DoesNotExist:
-            return GETJSONFILEType(json_data="File name not found")        
+            return GETJSONFILEType(json_data="File name not found") 
+               
+    
+    def resolve_get_all_json_table_name(self, info, db, user_id):
+        try:
+            if db == 1:
+                startTime = CurrentTimeFunc()
+                APICALLFUNCTION('get_all_json_table_name1', 'null')
+                fileName = main_media_url+'/media/upload_file/user_data/table_info_dtl.json'
+                table_data=[]
+                if os.path.isfile(fileName):
+                    f = open(fileName)
+                    data = json.load(f)
+                    table_info_dtl = data['table_info_dtl']
+                    table_data = [x for x in table_info_dtl if x['user_id'] == user_id]
+                # dir_list = os.listdir(fileName)
+                endTime = CurrentTimeFunc()
+                loadTime = (datetime.datetime.strptime(endTime, '%Y-%m-%d %H:%M:%S.%f') - datetime.datetime.strptime(startTime, '%Y-%m-%d %H:%M:%S.%f')).total_seconds() / 60
+                value_count = ValueCountFunc(table_data)
+                DataFetch_Static("get_all_json_table_name1", "json data", value_count, round(loadTime, 6))
+                return GETJSONFILEType(json_data=table_data)
+            
+            if db == 2:
+                startTime = CurrentTimeFunc()
+                APICALLFUNCTION('get_all_json_table_name2', 'null')
+                fileName = main_media_url+'/media/upload_file/user_data/table_info_dtl2.json'
+                table_data=[]
+                if os.path.isfile(fileName):
+                    f = open(fileName)
+                    data = json.load(f)
+                    table_info_dtl2 = data['table_info_dtl2']
+                    table_data = [x for x in table_info_dtl2 if x['user_id'] == user_id]
+                # dir_list = os.listdir(fileName)
+                endTime = CurrentTimeFunc()
+                loadTime = (datetime.datetime.strptime(endTime, '%Y-%m-%d %H:%M:%S.%f') - datetime.datetime.strptime(startTime, '%Y-%m-%d %H:%M:%S.%f')).total_seconds() / 60
+                value_count = ValueCountFunc(table_data)
+                DataFetch_Static("get_all_json_table_name2", "json data", value_count, round(loadTime, 6))
+                return GETJSONFILEType(json_data=table_data)
+            
+        except Table_data_info.DoesNotExist:
+            return GETJSONFILEType(json_data="Json Table name not found") 
+        
+    def resolve_get_json_table_col_data(self, info, db, user_id, table_id):
+        try:
+            if db == 1:
+                startTime = CurrentTimeFunc()
+                APICALLFUNCTION('get_json_table_col_data1', 'null')
+                fileName = main_media_url+'/media/upload_file/user_data/user_table_data.json'
+                table_data=[]
+                if user_id !="" and table_id !="":
+                    if os.path.isfile(fileName):
+                        f = open(fileName)
+                        data = json.load(f)
+                        user_table_data_col = data[user_id][table_id]
+                        # table_data = [x for x in table_info_dtl if x['user_id'] == user_id]
+                    # dir_list = os.listdir(fileName)
+                    endTime = CurrentTimeFunc()
+                    loadTime = (datetime.datetime.strptime(endTime, '%Y-%m-%d %H:%M:%S.%f') - datetime.datetime.strptime(startTime, '%Y-%m-%d %H:%M:%S.%f')).total_seconds() / 60
+                    value_count = ValueCountFunc(user_table_data_col)
+                    DataFetch_Static("get_json_table_col_data1", "json data", value_count, round(loadTime, 6))
+                    return GETJSONFILEType(json_data=user_table_data_col)
+                else:
+                    return GETJSONFILEType(json_data="User Id or Table Id are emplty problem.") 
+                
+            if db == 2:
+                startTime = CurrentTimeFunc()
+                APICALLFUNCTION('get_json_table_col_data2', 'null')
+                fileName = main_media_url+'/media/upload_file/user_data/user_table_data2.json'
+                table_data=[]
+                if user_id !="" and table_id !="":
+                    if os.path.isfile(fileName):
+                        f = open(fileName)
+                        data = json.load(f)
+                        user_table_data_col = data[user_id][table_id]
+                        # table_data = [x for x in table_info_dtl if x['user_id'] == user_id]
+                    # dir_list = os.listdir(fileName)
+                    endTime = CurrentTimeFunc()
+                    loadTime = (datetime.datetime.strptime(endTime, '%Y-%m-%d %H:%M:%S.%f') - datetime.datetime.strptime(startTime, '%Y-%m-%d %H:%M:%S.%f')).total_seconds() / 60
+                    value_count = ValueCountFunc(user_table_data_col)
+                    DataFetch_Static("get_json_table_col_data2", "json data", value_count, round(loadTime, 6))
+                    return GETJSONFILEType(json_data=user_table_data_col)
+                else:
+                    return GETJSONFILEType(json_data="User Id or Table Id are emplty problem.") 
+            
+        except Table_data_info.DoesNotExist:
+            return GETJSONFILEType(json_data="Json Table Col Data not found") 
+        
+
+    def resolve_get_table_data(self, info, db, user_id, table_id):
+        try:
+            if db == 1:
+                startTime = CurrentTimeFunc()
+                APICALLFUNCTION('get_table_data', 'null')
+                # table_data = Table_data_info.objects.filter(table_id=table_id, user_id=user_id).order_by('-table_ref_id')
+                # user_final_table_data = DynamicTableData(table_data)
+                sections = {}
+                items = []
+                refId = []
+                table_data = Table_data_info.objects.filter(table_id=table_id, user_id=user_id).order_by('-table_ref_id')
+                for k in table_data:
+                    refId.append(k.table_ref_id)
+                    
+                refId = list(set(refId))
+
+                for m in refId:
+                    for i in table_data:
+                        if i.table_ref_id==m:
+                            sections[i.column_name]=i.column_data
+                            # sections['table_id']=i.table_id
+                            # sections['table_ref_id']=i.table_ref_id
+                    if sections != "":
+                        items.append(sections)   
+                        sections = {}    
+
+                endTime = CurrentTimeFunc()
+                loadTime = (datetime.datetime.strptime(endTime, '%Y-%m-%d %H:%M:%S.%f') - datetime.datetime.strptime(startTime, '%Y-%m-%d %H:%M:%S.%f')).total_seconds() / 60
+                value_count = ValueCountFunc(items)
+                DataFetch_Static("get_table_data", "table data", value_count, round(loadTime, 6))
+                return GETJSONFILEType(json_data=items)
+                
+            if db == 2:
+                startTime = CurrentTimeFunc()
+                APICALLFUNCTION('get_table_data', 'null')
+                # table_data = Table_data_info2.objects.filter(table_id=table_id, user_id=user_id).order_by('-table_ref_id')
+                # user_final_table_data = DynamicTableData(table_data)
+
+                sections = {}
+                items = []
+                refId = []
+                table_data = Table_data_info2.objects.filter(table_id=table_id, user_id=user_id).order_by('-table_ref_id')
+                for k in table_data:
+                    refId.append(k.table_ref_id)
+                    
+                refId = list(set(refId))
+
+                for m in refId:
+                    for i in table_data:
+                        if i.table_ref_id==m:
+                            sections[i.column_name]=i.column_data
+                            # sections['table_id']=i.table_id
+                            # sections['table_ref_id']=i.table_ref_id
+                    if sections != "":
+                        items.append(sections)   
+                        sections = {}    
+
+                endTime = CurrentTimeFunc()
+                loadTime = (datetime.datetime.strptime(endTime, '%Y-%m-%d %H:%M:%S.%f') - datetime.datetime.strptime(startTime, '%Y-%m-%d %H:%M:%S.%f')).total_seconds() / 60
+                value_count = ValueCountFunc(items)
+                DataFetch_Static("get_table_data", "table data", value_count, round(loadTime, 6))
+                return GETJSONFILEType(json_data=items)
+                
+        except Table_data_info.DoesNotExist:
+            return GETJSONFILEType(json_data="Table Col Data not found") 
+               
     
     def resolve_get_json_data_merge(self, info, api_key, codeFile, fileList):
         try:
@@ -2848,7 +3651,9 @@ class UserSignUp1(graphene.Mutation):
     address = graphene.Field(TableDataInfoType)
     city = graphene.Field(TableDataInfoType)
     state = graphene.Field(TableDataInfoType)
-   
+    email=graphene.String()
+    first_name=graphene.String()
+    main_url=graphene.String()
     
 
     class Arguments:
@@ -2869,7 +3674,7 @@ class UserSignUp1(graphene.Mutation):
         userSignUpEmail.save()
         userSignUpPassword = Table_data_info(table_id=1, table_col_id=2, user_id=user_count_number+1, column_data=password, table_ref_id=user_count+1, col_data_type="String", column_name='password') 
         userSignUpPassword.save()
-        userSignUpRole = Table_data_info(table_id=1, table_col_id=3, user_id=user_count_number+1, column_data="Invitation_User", table_ref_id=user_count+1, col_data_type="String", column_name='role') 
+        userSignUpRole = Table_data_info(table_id=1, table_col_id=3, user_id=user_count_number+1, column_data="User", table_ref_id=user_count+1, col_data_type="String", column_name='role') 
         userSignUpRole.save()
         userSignUpIsActive = Table_data_info(table_id=1, table_col_id=4, user_id=user_count_number+1, column_data="False", table_ref_id=user_count+1, col_data_type="Boolean", column_name='is_active') 
         userSignUpIsActive.save()
@@ -2904,7 +3709,7 @@ class UserSignUp1(graphene.Mutation):
         state.save()
         
         
-        send_activation_mail1(email, first_name)
+        # send_activation_mail1(email, first_name)
         
             
         return UserSignUp1(
@@ -2924,7 +3729,113 @@ class UserSignUp1(graphene.Mutation):
             phone_number=phone_number,
             address=address,
             city=city,
-            state=state
+            state=state,
+            email=email,
+            first_name=first_name,
+            main_url=main_url
+        )         
+        
+
+class DynamicRoleBaseUserSignUp(graphene.Mutation):
+    user_sign_up_table_data_info_email = graphene.Field(TableDataInfoType)
+    user_sign_up_table_data_info_password = graphene.Field(TableDataInfoType)
+    first_name_data = graphene.Field(TableDataInfoType)
+    last_name_data = graphene.Field(TableDataInfoType)
+    zipcode_data = graphene.Field(TableDataInfoType)
+    role_data = graphene.Field(TableDataInfoType)
+    is_email_verified = graphene.Field(TableDataInfoType)
+    is_active = graphene.Field(TableDataInfoType)
+    is_superuser = graphene.Field(TableDataInfoType)
+    user_id = graphene.Field(TableDataInfoType)
+    middle_name = graphene.Field(TableDataInfoType)
+    dob = graphene.Field(TableDataInfoType)
+    gender = graphene.Field(TableDataInfoType)
+    phone_number = graphene.Field(TableDataInfoType)
+    address = graphene.Field(TableDataInfoType)
+    city = graphene.Field(TableDataInfoType)
+    state = graphene.Field(TableDataInfoType)
+    email=graphene.String()
+    first_name=graphene.String()
+    main_url=graphene.String()
+    
+
+    class Arguments:
+        first_name = graphene.String(required=True)
+        last_name = graphene.String(required=True)
+        email = graphene.String(required=True)
+        password = graphene.String(required=True)
+       
+        
+    def mutate(self, info, first_name, last_name, email, password):
+        APICALLFUNCTION('UserSignUp1 mutation', 'null')
+        
+        user_count = Table_data_info.objects.filter(table_id=1).count()
+        user_count_number = Table_data_info.objects.filter(column_name="user_id", table_id=1).count()
+        if Table_data_info.objects.filter(column_data=email, table_id=1).exists():
+            raise Exception("Email already exists.")
+        userSignUpEmail = Table_data_info(table_id=1, table_col_id=1, user_id=user_count_number+1, column_data=email, table_ref_id=user_count+1, col_data_type="String", column_name='email') 
+        userSignUpEmail.save()
+        userSignUpPassword = Table_data_info(table_id=1, table_col_id=2, user_id=user_count_number+1, column_data=password, table_ref_id=user_count+1, col_data_type="String", column_name='password') 
+        userSignUpPassword.save()
+        userSignUpRole = Table_data_info(table_id=1, table_col_id=3, user_id=user_count_number+1, column_data="User", table_ref_id=user_count+1, col_data_type="String", column_name='role') 
+        userSignUpRole.save()
+        userSignUpIsActive = Table_data_info(table_id=1, table_col_id=4, user_id=user_count_number+1, column_data="False", table_ref_id=user_count+1, col_data_type="Boolean", column_name='is_active') 
+        userSignUpIsActive.save()
+        
+        userSignUpIsSuperuser = Table_data_info(table_id=1, table_col_id=5, user_id=user_count_number+1, column_data="False", table_ref_id=user_count+1, col_data_type="Boolean", column_name='is_superuser') 
+        userSignUpIsSuperuser.save()
+        
+        userSignUpEmailActivationFlag = Table_data_info(table_id=1, table_col_id=6, user_id=user_count_number+1, column_data="False", table_ref_id=user_count+1, col_data_type="Boolean", column_name='is_email_verified') 
+        userSignUpEmailActivationFlag.save()
+        
+        userSignUpfirstname = Table_data_info(table_id=1, table_col_id=7, user_id=user_count_number+1, column_data=first_name, table_ref_id=user_count+1, col_data_type="String", column_name='first_name') 
+        userSignUpfirstname.save()
+        userSignUpLastName = Table_data_info(table_id=1, table_col_id=8, user_id=user_count_number+1, column_data=last_name, table_ref_id=user_count+1, col_data_type="String", column_name='last_name') 
+        userSignUpLastName.save()
+        userSignUpZipCode = Table_data_info(table_id=1, table_col_id=9, user_id=user_count_number+1, column_data="0", table_ref_id=user_count+1, col_data_type="String", column_name='zipcode') 
+        userSignUpZipCode.save()
+        userSignUpUserId = Table_data_info(table_id=1, table_col_id=10, user_id=user_count_number+1, column_data=user_count_number+1, table_ref_id=user_count+1, col_data_type="Int", column_name='user_id') 
+        userSignUpUserId.save()
+        middle_name = Table_data_info(table_id=1, table_col_id=11, user_id=user_count_number+1, column_data="A", table_ref_id=user_count+1, col_data_type="String", column_name='middle_name') 
+        middle_name.save()
+        dob = Table_data_info(table_id=1, table_col_id=12, user_id=user_count_number+1, column_data="dob", table_ref_id=user_count+1, col_data_type="datetimefield", column_name='dob') 
+        dob.save()
+        gender = Table_data_info(table_id=1, table_col_id=13, user_id=user_count_number+1, column_data="Male", table_ref_id=user_count+1, col_data_type="string", column_name='gender') 
+        gender.save()
+        phone_number = Table_data_info(table_id=1, table_col_id=14, user_id=user_count_number+1, column_data="phone_number", table_ref_id=user_count+1, col_data_type="string", column_name='phone_number') 
+        phone_number.save()
+        address = Table_data_info(table_id=1, table_col_id=15, user_id=user_count_number+1, column_data="address", table_ref_id=user_count+1, col_data_type="string", column_name='address') 
+        address.save()
+        city = Table_data_info(table_id=1, table_col_id=16, user_id=user_count_number+1, column_data="city", table_ref_id=user_count+1, col_data_type="string", column_name='city') 
+        city.save()
+        state = Table_data_info(table_id=1, table_col_id=17, user_id=user_count_number+1, column_data="state", table_ref_id=user_count+1, col_data_type="string", column_name='state') 
+        state.save()
+        
+        
+        # send_activation_mail1(email, first_name)
+        
+            
+        return UserSignUp1(
+            user_sign_up_table_data_info_email=userSignUpEmail, 
+            user_sign_up_table_data_info_password=userSignUpPassword, 
+            first_name_data=userSignUpfirstname, 
+            last_name_data=userSignUpLastName, 
+            role_data=userSignUpRole, 
+            zipcode_data=userSignUpZipCode, 
+            is_email_verified=userSignUpEmailActivationFlag, 
+            is_active=userSignUpIsActive, 
+            is_superuser=userSignUpIsSuperuser, 
+            user_id=userSignUpUserId, 
+            middle_name=middle_name, 
+            dob=dob, 
+            gender=gender,
+            phone_number=phone_number,
+            address=address,
+            city=city,
+            state=state,
+            email=email,
+            first_name=first_name,
+            main_url=main_url
         )         
         
         
@@ -2947,6 +3858,7 @@ def CurrentTimeStand():
         
 class UserSignIn(graphene.Mutation): 
     result = graphene.Boolean()
+    otp = graphene.String()
     class Arguments:
         email = graphene.String(required=True)
         password = graphene.String(required=True)
@@ -2992,8 +3904,8 @@ class UserSignIn(graphene.Mutation):
                                 count=count+1
                             
                             if count == 2:
-                                send_user_otp_mail(email, user_otp, cts)
-                                return UserSignIn(result=True)    
+                                # send_user_otp_mail(email, user_otp, cts)
+                                return UserSignIn(result=True, otp=user_otp)    
                             
                     else:    
                         userPassDetailEmail = Table_data_info(table_id=2, table_col_id=1, user_id=email_detail.user_id, column_data=email, table_ref_id=email_detail.table_ref_id, col_data_type="String", column_name='user_email') 
@@ -3006,18 +3918,20 @@ class UserSignIn(graphene.Mutation):
                         userPassDetailToken.save()
                         
         
-                        JsonLogFile(current_time)
+                        # JsonLogFile(current_time)
                         
-                        return UserSignIn(result=True)
+                        return UserSignIn(result=True, otp=user_otp)
                 else:
-                    return UserSignIn(result=False)
+                    return UserSignIn(result=False, otp="")
             else:
-                return UserSignIn(result=False)                   
+                return UserSignIn(result=False, otp="")                   
     
     
 class UserOTPCheck(graphene.Mutation): 
     result = graphene.Boolean()
     token = graphene.String()
+    userId = graphene.String()
+    userName = graphene.String()
     # login = graphene.List(TableDataInfoType)
     class Arguments:
         email = graphene.String(required=True)
@@ -3025,9 +3939,7 @@ class UserOTPCheck(graphene.Mutation):
 
     def mutate(self, info, email , user_otp):
         try:
-            
             # APICALLFUNCTION('UserOTPCheck mutation', 'null')
-            
             user_email_otp = Table_data_info.objects.get(table_id=2, table_col_id=1, column_data=email)
             user_otp_check = Table_data_info.objects.get(table_id=2, table_col_id=2, table_ref_id=user_email_otp.table_ref_id, column_data=user_otp, user_id=user_email_otp.user_id)
             if user_email_otp.table_ref_id==user_otp_check.table_ref_id and user_email_otp.user_id==user_otp_check.user_id and user_otp_check.column_data==user_otp:
@@ -3043,16 +3955,18 @@ class UserOTPCheck(graphene.Mutation):
                     login_data[m.column_name] = m.column_data
 
                 # login_data1.append(login_data)
-                print("login_data", login_data)
+                # print("login_data", login_data)
                 # print("TokenGen",  TokenGen(login_data))
                 
                 # print("TokenGen",  JWTTokenGenerator.generate_token(login_data))
                 # print("TokenGen",  get_tokens_for_user(email_detail))
                 token = JWTTokenGenerator.generate_token(login_data)
+                # print("token", token)
                 user_token_update = Table_data_info.objects.get(table_id=2, table_col_id=4, column_name='user_token', user_id=email_detail.user_id)
+                # print("user_token_update", user_token_update)
                 user_token_update.column_data=token
                 user_token_update.save()
-                return UserOTPCheck(result=True, token=token)
+                return UserOTPCheck(result=True, token=token, userId=login_data['user_id'], userName=login_data['first_name'])
                 # return UserOTPCheck(result=True, login=login)
             else:
                 return UserOTPCheck(result=False)
@@ -3285,6 +4199,7 @@ class CreateTableDataInfo(graphene.Mutation):
 
 class CRUDInfo(graphene.Mutation):
     table_data_info = graphene.Field(TableDataInfoType)
+    table_data_info2 = graphene.Field(TableDataInfoType2)
     
     class Arguments:
         table_id = graphene.Int(required=True)
@@ -3294,13 +4209,20 @@ class CRUDInfo(graphene.Mutation):
         column_data = graphene.String(required=True)
         column_name = graphene.String(required=True)
         user_id = graphene.String(required=True)
+        db = graphene.Int(required=True)
         
         
-    def mutate(self, info, table_id, table_col_id, table_ref_id, tab_rel_id, column_data, user_id, column_name):
-        APICALLFUNCTION('CRUDInfo mutation', 'null')
-        Tabledatainfo = Table_data_info(table_id=table_id, table_col_id=table_col_id, table_ref_id=table_ref_id, tab_rel_id=tab_rel_id, column_data=column_data,  user_id=user_id, col_data_type="null", column_name=column_name) 
-        Tabledatainfo.save()    
-        return CreateTableDataInfo(table_data_info=Tabledatainfo) 	        
+    def mutate(self, info, table_id, table_col_id, table_ref_id, tab_rel_id, column_data, user_id, column_name, db):
+        if db == 1:
+            APICALLFUNCTION('CRUDInfo mutation', 'null')
+            Tabledatainfo = Table_data_info(table_id=table_id, table_col_id=table_col_id, table_ref_id=table_ref_id, tab_rel_id=tab_rel_id, column_data=column_data,  user_id=user_id, col_data_type="null", column_name=column_name) 
+            Tabledatainfo.save()    
+            return CRUDInfo(table_data_info=Tabledatainfo) 	        
+        if db == 2:
+            APICALLFUNCTION('CRUDInfo2 mutation', 'null')
+            Tabledatainfo2 = Table_data_info2(table_id=table_id, table_col_id=table_col_id, table_ref_id=table_ref_id, tab_rel_id=tab_rel_id, column_data=column_data,  user_id=user_id, col_data_type="null", column_name=column_name) 
+            Tabledatainfo2.save()    
+            return CRUDInfo(table_data_info2=Tabledatainfo2) 	        
 	        
     
     
@@ -3323,24 +4245,24 @@ class CRUDInfoUserId(graphene.Mutation):
         return CreateTableDataInfo(table_data_info=Tabledatainfo)    
     
 
-class CreateTableColInfo(graphene.Mutation):
-    Table_col_info = graphene.Field(TableColInfoType)  
+# class CreateTableColInfo(graphene.Mutation):
+#     Table_col_info = graphene.Field(TableColInfoType)  
     
-    class Arguments:
-        col_desc = graphene.String(required=True)  
-        column_name = graphene.String(required=True)  
-        col_data_type = graphene.String(required=True)  
-        table_col_id = graphene.Int(required=True)  
-        col_classi = graphene.String(required=True)  
+#     class Arguments:
+#         col_desc = graphene.String(required=True)  
+#         column_name = graphene.String(required=True)  
+#         col_data_type = graphene.String(required=True)  
+#         table_col_id = graphene.Int(required=True)  
+#         col_classi = graphene.String(required=True)  
         
-    def mutate(self, info, col_desc, column_name, col_data_type, table_col_id, col_classi):
-        APICALLFUNCTION('CreateTableColInfo mutation', 'null')
-        Tablecolinfo = Table_col_info(table_id=2, col_desc=col_desc, column_name=column_name, col_data_type=col_data_type, table_col_id=table_col_id, col_classi=col_classi) 
-        Tablecolinfo.save()      
+#     def mutate(self, info, col_desc, column_name, col_data_type, table_col_id, col_classi):
+#         APICALLFUNCTION('CreateTableColInfo mutation', 'null')
+#         Tablecolinfo = Table_col_info(table_id=2, col_desc=col_desc, column_name=column_name, col_data_type=col_data_type, table_col_id=table_col_id, col_classi=col_classi) 
+#         Tablecolinfo.save()      
         
-        TableColInfoSubcription.broadcast(payload={'id': Tablecolinfo.id, 'col_desc': Tablecolinfo.col_desc, 'column_name': Tablecolinfo.column_name })
+#         TableColInfoSubcription.broadcast(payload={'id': Tablecolinfo.id, 'col_desc': Tablecolinfo.col_desc, 'column_name': Tablecolinfo.column_name })
         
-        return CreateTableColInfo(Table_col_info=Tablecolinfo) 
+#         return CreateTableColInfo(Table_col_info=Tablecolinfo) 
 
 
 class TableColInfoSubcription(channels_graphql_ws.Subscription):
@@ -3481,12 +4403,38 @@ class column_data_delete(graphene.Mutation):
 
     class Arguments:
         id = graphene.Int(required=True)
+        user_id = graphene.Int(required=True)
 
-    def mutate(self, info, id):
-        APICALLFUNCTION('column_data_delete mutation', 'null')
-        record = Table_data_info.objects.get(table_data_id=id)
-        record.delete()
-        return column_data_delete(message=f"{id} id is Deleted") 
+    def mutate(self, info, id, user_id):
+        if user_id != "0":
+            APICALLFUNCTION('column_data_delete mutation', 'null')
+            record = Table_data_info.objects.get(table_data_id=id, user_id=user_id)
+            record.delete()
+            return column_data_delete(message=f"{id} id is Deleted") 
+        else:
+            APICALLFUNCTION('column_data_delete mutation', 'null')
+            record = Table_data_info.objects.get(table_data_id=id)
+            record.delete()
+            return column_data_delete(message=f"{id} id is Deleted") 
+        
+class column_data_delete2(graphene.Mutation):
+    message = graphene.String()
+
+    class Arguments:
+        id = graphene.Int(required=True)
+        user_id = graphene.Int(required=True)
+
+    def mutate(self, info, id, user_id):
+        if user_id != "0":
+            APICALLFUNCTION('column_data_delete mutation', 'null')
+            record = Table_data_info2.objects.get(table_data_id=id, user_id=user_id)
+            record.delete()
+            return column_data_delete2(message=f"{id} id is Deleted") 
+        else:
+            APICALLFUNCTION('column_data_delete mutation', 'null')
+            record = Table_data_info2.objects.get(table_data_id=id)
+            record.delete()
+            return column_data_delete2(message=f"{id} id is Deleted") 
         
         
 class column_data_update(graphene.Mutation):
@@ -3495,13 +4443,23 @@ class column_data_update(graphene.Mutation):
     class Arguments:
         id = graphene.Int(required=True)
         column_data = graphene.String(required=True)
+        user_id = graphene.String(required=True)
+        db = graphene.Int(required=True)
+        
 
-    def mutate(self, info, id, column_data):
-        APICALLFUNCTION('column_data_update mutation', 'null')
-        record = Table_data_info.objects.get(table_data_id=id)
-        record.column_data=column_data
-        record.save()
-        return column_data_delete(message=f"{id} id is Updated") 
+    def mutate(self, info, id, column_data, user_id, db):
+        if db == 1:
+            APICALLFUNCTION('column_data_update mutation', 'null')
+            record = Table_data_info.objects.get(table_data_id=id, user_id=user_id)
+            record.column_data=column_data
+            record.save()
+            return column_data_update(message=f"{id} id is Updated") 
+        if db == 2:
+            APICALLFUNCTION('column_data_update2 mutation', 'null')
+            record = Table_data_info2.objects.get(table_data_id=id, user_id=user_id)
+            record.column_data=column_data
+            record.save()
+            return column_data_update(message=f"{id} id is Updated") 
         
         
 class ImageUpload(graphene.Mutation):
@@ -4653,26 +5611,41 @@ class TableDataCreate(graphene.Mutation):
         
         
         
-        
+# TableInfoDetail 
 class CreateTableInfoDetail(graphene.Mutation):
     table_info_dtl = graphene.Field(TableInfoDtlType)
+    table_info_dtl2 = graphene.Field(TableInfoDtlType2)
     message = graphene.String()
     
     class Arguments:
         table_name = graphene.String(required=True)
         table_description = graphene.String(required=True)
         table_type = graphene.String(required=True)
+        user_id = graphene.String(required=True)
+        db = graphene.Int(required=True)
         
         
-    def mutate(self, info, table_name, table_description, table_type):
-        APICALLFUNCTION('CreateTableInfoDetail mutation', 'null')
-        table_dtl = Table_info_dtl.objects.filter(table_name=table_name)
-        if table_dtl.count() == 0:
-            Tableinfodtl = Table_info_dtl(table_name=table_name, table_description=table_description, table_type=table_type) 
-            Tableinfodtl.save()    
-            return CreateTableInfoDetail(table_info_dtl=Tableinfodtl, message=f"{table_name} Table Created Successfully") 
-        else:
-             return CreateTableInfoDetail(message=f"{table_name} table name already exists, Please give another table name and try again") 
+    def mutate(self, info, table_name, table_description, table_type, user_id, db):
+        print("db, db type", db, type(db))
+        print("user_id, user_id type", user_id, type(user_id))
+        if db == 1:
+            APICALLFUNCTION('CreateTableInfoDetail mutation', 'null')
+            table_dtl = Table_info_dtl.objects.filter(table_name=table_name, user_id=user_id)
+            if table_dtl.count() == 0:
+                Tableinfodtl = Table_info_dtl(table_name=table_name, table_description=table_description, table_type=table_type, user_id=user_id) 
+                Tableinfodtl.save()    
+                return CreateTableInfoDetail(table_info_dtl=Tableinfodtl, message=f"{table_name} Table Created Successfully") 
+            else:
+                return CreateTableInfoDetail(message=f"{table_name} table name already exists, Please give another table name and try again") 
+        elif db==2:
+            APICALLFUNCTION('CreateTableInfoDetail2 mutation', 'null')
+            table_dtl2 = Table_info_dtl2.objects.filter(table_name=table_name, user_id=user_id)
+            if table_dtl2.count() == 0:
+                Tableinfodtl2 = Table_info_dtl2(table_name=table_name, table_description=table_description, table_type=table_type, user_id=user_id) 
+                Tableinfodtl2.save()    
+                return CreateTableInfoDetail(table_info_dtl2=Tableinfodtl2, message=f"{table_name} Table Created Successfully") 
+            else:
+                return CreateTableInfoDetail(message=f"{table_name} table name already exists, Please give another table name and try again") 
 
 
 
@@ -4684,19 +5657,34 @@ class UpdateTableInfoDetail(graphene.Mutation):
         new_table_name = graphene.String(required=True)
         table_description = graphene.String(required=True)
         table_type = graphene.String(required=True)
+        user_id = graphene.String(required=True)
+        db = graphene.Int(required=True)
 
-    def mutate(self, info,  old_table_name, new_table_name, table_description, table_type):
-        APICALLFUNCTION('UpdateTableInfoDetail mutation', 'null')
-        record = Table_info_dtl.objects.filter(table_name=old_table_name)
-        if record.count() == 1:
-            record1 = Table_info_dtl.objects.get(table_name=old_table_name)
-            record1.table_name=new_table_name
-            record1.table_description=table_description
-            record1.table_type=table_type
-            record1.save()
-            return UpdateTableInfoDetail(message=f"{old_table_name} table name is successfully updated")
-        else: 
-            return UpdateTableInfoDetail(message=f"{old_table_name} table name is not found")
+    def mutate(self, info,  old_table_name, new_table_name, table_description, table_type, user_id, db):
+        if db==1:
+            APICALLFUNCTION('UpdateTableInfoDetail mutation', 'null')
+            record = Table_info_dtl.objects.filter(table_name=old_table_name, user_id=user_id)
+            if record.count() == 1:
+                record1 = Table_info_dtl.objects.get(table_name=old_table_name, user_id=user_id)
+                record1.table_name=new_table_name
+                record1.table_description=table_description
+                record1.table_type=table_type
+                record1.save()
+                return UpdateTableInfoDetail(message=f"{old_table_name} table name is successfully updated")
+            else: 
+                return UpdateTableInfoDetail(message=f"{old_table_name} table name is not found")
+        elif db==2:
+            APICALLFUNCTION('UpdateTableInfoDetail2 mutation', 'null')
+            record = Table_info_dtl2.objects.filter(table_name=old_table_name, user_id=user_id)
+            if record.count() == 1:
+                record1 = Table_info_dtl2.objects.get(table_name=old_table_name, user_id=user_id)
+                record1.table_name=new_table_name
+                record1.table_description=table_description
+                record1.table_type=table_type
+                record1.save()
+                return UpdateTableInfoDetail(message=f"{old_table_name} table name is successfully updated")
+            else: 
+                return UpdateTableInfoDetail(message=f"{old_table_name} table name is not found")
 
 
 
@@ -4705,27 +5693,115 @@ class DeleteTableInfoDetail(graphene.Mutation):
 
     class Arguments:
         table_name = graphene.String(required=True)
+        user_id = graphene.String(required=True)
+        db = graphene.Int(required=True)
+       
+
+    def mutate(self, info, table_name, user_id, db):
+        if db == 1:
+            APICALLFUNCTION('DeleteTableInfoDetail mutation', 'null')
+            record = Table_info_dtl.objects.filter(table_name=table_name, user_id=user_id)
+            if record.count() == 1:
+                table_dtl = Table_info_dtl.objects.get(table_name=table_name, user_id=user_id)
+                table_col_info = Table_col_info.objects.filter(table_id=table_dtl.table_id)
+                table_data_info = Table_data_info.objects.filter(table_id=table_dtl.table_id)
+                if table_col_info.count() == 0 and table_data_info.count() == 0:
+                    table_dtl.delete()
+                    return DeleteTableInfoDetail(message=f"{table_name} table name is successfully deleted")
+                else:
+                    return DeleteTableInfoDetail(message=f"{table_name} table name of  table_col_info or table_data_info any value exists in your database.So I can't delete the {table_name} table name")
+            else:
+                return DeleteTableInfoDetail(message=f"{table_name} table name is not found") 
+        
+        if db == 2:
+            APICALLFUNCTION('DeleteTableInfoDetail2 mutation', 'null')
+            record = Table_info_dtl2.objects.filter(table_name=table_name, user_id=user_id)
+            if record.count() == 1:
+                table_dtl = Table_info_dtl2.objects.get(table_name=table_name, user_id=user_id)
+                table_col_info = Table_col_info2.objects.filter(table_id=table_dtl.table_id)
+                table_data_info = Table_data_info2.objects.filter(table_id=table_dtl.table_id)
+                if table_col_info.count() == 0 and table_data_info.count() == 0:
+                    table_dtl.delete()
+                    return DeleteTableInfoDetail(message=f"{table_name} table name is successfully deleted")
+                else:
+                    return DeleteTableInfoDetail(message=f"{table_name} table name of  table_col_info or table_data_info any value exists in your database.So I can't delete the {table_name} table name")
+            else:
+                return DeleteTableInfoDetail(message=f"{table_name} table name is not found") 
+        
+# TableInfoDetail2
+class CreateTableInfoDetail2(graphene.Mutation):
+    table_info_dtl2 = graphene.Field(TableInfoDtlType2)
+    message = graphene.String()
+    
+    class Arguments:
+        table_name = graphene.String(required=True)
+        table_description = graphene.String(required=True)
+        table_type = graphene.String(required=True)
+        
+        
+    def mutate(self, info, table_name, table_description, table_type):
+        APICALLFUNCTION('CreateTableInfoDetail2 mutation', 'null')
+        table_dtl = Table_info_dtl2.objects.filter(table_name=table_name)
+        if table_dtl.count() == 0:
+            Tableinfodtl = Table_info_dtl2(table_name=table_name, table_description=table_description, table_type=table_type) 
+            Tableinfodtl.save()    
+            return CreateTableInfoDetail2(table_info_dtl=Tableinfodtl, message=f"{table_name} Table Created Successfully") 
+        else:
+             return CreateTableInfoDetail2(message=f"{table_name} table name already exists, Please give another table name and try again") 
+
+
+
+class UpdateTableInfoDetail2(graphene.Mutation):
+    message = graphene.String()
+
+    class Arguments:
+        old_table_name = graphene.String(required=True)
+        new_table_name = graphene.String(required=True)
+        table_description = graphene.String(required=True)
+        table_type = graphene.String(required=True)
+
+    def mutate(self, info,  old_table_name, new_table_name, table_description, table_type):
+        APICALLFUNCTION('UpdateTableInfoDetail2 mutation', 'null')
+        record = Table_info_dtl2.objects.filter(table_name=old_table_name)
+        if record.count() == 1:
+            record1 = Table_info_dtl2.objects.get(table_name=old_table_name)
+            record1.table_name=new_table_name
+            record1.table_description=table_description
+            record1.table_type=table_type
+            record1.save()
+            return UpdateTableInfoDetail2(message=f"{old_table_name} table name is successfully updated")
+        else: 
+            return UpdateTableInfoDetail2(message=f"{old_table_name} table name is not found")
+
+
+
+class DeleteTableInfoDetail2(graphene.Mutation):
+    message = graphene.String()
+
+    class Arguments:
+        table_name = graphene.String(required=True)
        
 
     def mutate(self, info, table_name):
-        APICALLFUNCTION('DeleteTableInfoDetail mutation', 'null')
-        record = Table_info_dtl.objects.filter(table_name=table_name)
+        APICALLFUNCTION('DeleteTableInfoDetail2 mutation', 'null')
+        record = Table_info_dtl2.objects.filter(table_name=table_name)
         if record.count() == 1:
-            table_dtl = Table_info_dtl.objects.get(table_name=table_name)
-            table_col_info = Table_col_info.objects.filter(table_id=table_dtl.table_id)
-            table_data_info = Table_data_info.objects.filter(table_id=table_dtl.table_id)
+            table_dtl = Table_info_dtl2.objects.get(table_name=table_name)
+            table_col_info = Table_col_info2.objects.filter(table_id=table_dtl.table_id)
+            table_data_info = Table_data_info2.objects.filter(table_id=table_dtl.table_id)
             if table_col_info.count() == 0 and table_data_info.count() == 0:
                 table_dtl.delete()
-                return DeleteTableInfoDetail(message=f"{table_name} table name is successfully deleted")
+                return DeleteTableInfoDetail2(message=f"{table_name} table name is successfully deleted")
             else:
-                 return DeleteTableInfoDetail(message=f"{table_name} table name of  table_col_info or table_data_info any value exists in your database.So I can't delete the {table_name} table name")
+                 return DeleteTableInfoDetail2(message=f"{table_name} table name of  table_col_info or table_data_info any value exists in your database.So I can't delete the {table_name} table name")
         else:
-            return DeleteTableInfoDetail(message=f"{table_name} table name is not found") 
+            return DeleteTableInfoDetail2(message=f"{table_name} table name is not found") 
         
         
-        
+# TableColInfo       
 class CreateTableColInfo(graphene.Mutation):
     table_col_info = graphene.Field(TableColInfoType)
+    table_col_info2 = graphene.Field(TableColInfoType2)
     message = graphene.String()
     
     class Arguments:
@@ -4735,18 +5811,35 @@ class CreateTableColInfo(graphene.Mutation):
         col_data_type = graphene.String(required=True)
         col_desc = graphene.String(required=True)
         col_classi = graphene.String(required=True)
+        user_id = graphene.String(required=True)
+        db = graphene.Int(required=True)
         
         
-    def mutate(self, info, table_name, table_col_id, column_name, col_data_type, col_desc, col_classi):
-        APICALLFUNCTION('CreateTableColInfo mutation', 'null')
-        table_dtl = Table_info_dtl.objects.filter(table_name=table_name)
-        if table_dtl.count() == 1:
-            table_dtl1 = Table_info_dtl.objects.get(table_name=table_name)
-            Tablecolinfo = Table_col_info(table_id=table_dtl1.table_id, table_col_id=table_col_id, column_name=column_name, col_data_type=col_data_type, col_desc=col_desc, col_classi=col_classi) 
-            Tablecolinfo.save()    
-            return CreateTableColInfo(table_col_info=Tablecolinfo, message=f"{table_name} table name of column created successfully") 
-        else:
-            return CreateTableColInfo(message=f"{table_name} table name is not found")
+    def mutate(self, info, table_name, table_col_id, column_name, col_data_type, col_desc, col_classi, user_id, db):
+        if db == 1:
+            APICALLFUNCTION('CreateTableColInfo mutation', 'null')
+            table_dtl = Table_info_dtl.objects.filter(table_name=table_name, user_id=user_id)
+            if table_dtl.count() == 1:
+                table_dtl1 = Table_info_dtl.objects.get(table_name=table_name, user_id=user_id)
+                exist_column = Table_col_info.objects.filter(table_id=table_dtl1.table_id, table_col_id=table_col_id, column_name=column_name, col_data_type=col_data_type, col_desc=col_desc, col_classi=col_classi, user_id=user_id)
+                if exist_column.count() == 0:
+                    Tablecolinfo = Table_col_info(table_id=table_dtl1.table_id, table_col_id=table_col_id, column_name=column_name, col_data_type=col_data_type, col_desc=col_desc, col_classi=col_classi, user_id=user_id) 
+                    Tablecolinfo.save()    
+                return CreateTableColInfo(table_col_info=Tablecolinfo, message=f"{table_name} table name of column created successfully") 
+            else:
+                return CreateTableColInfo(message=f"{table_name} table name is not found")
+        elif db == 2:
+            APICALLFUNCTION('CreateTableColInfo2 mutation', 'null')
+            table_dtl2 = Table_info_dtl2.objects.filter(table_name=table_name, user_id=user_id)
+            if table_dtl2.count() == 1:
+                table_dtl2 = Table_info_dtl2.objects.get(table_name=table_name, user_id=user_id)
+                exist_column = Table_col_info2.objects.filter(table_id=table_dtl2.table_id, table_col_id=table_col_id, column_name=column_name, col_data_type=col_data_type, col_desc=col_desc, col_classi=col_classi, user_id=user_id) 
+                if exist_column.count() == 0:
+                    Tablecolinfo2 = Table_col_info2(table_id=table_dtl2.table_id, table_col_id=table_col_id, column_name=column_name, col_data_type=col_data_type, col_desc=col_desc, col_classi=col_classi, user_id=user_id) 
+                    Tablecolinfo2.save()    
+                return CreateTableColInfo(table_col_info2=Tablecolinfo2, message=f"{table_name} table name of column created successfully") 
+            else:
+                return CreateTableColInfo(message=f"{table_name} table name is not found")
         
 class UpdateTableColInfo(graphene.Mutation):
     message = graphene.String()
@@ -4802,6 +5895,87 @@ class DeleteTableColInfo(graphene.Mutation):
                 return DeleteTableColInfo(message=f"{table_name} table name of {column_name} column is not found")
         else:
             return DeleteTableColInfo(message=f"{table_name} table name is not found")
+
+
+# TableColInfo2        
+class CreateTableColInfo2(graphene.Mutation):
+    table_col_info2 = graphene.Field(TableColInfoType2)
+    message = graphene.String()
+    
+    class Arguments:
+        table_name = graphene.String(required=True)
+        table_col_id = graphene.Int(required=True)
+        column_name = graphene.String(required=True)
+        col_data_type = graphene.String(required=True)
+        col_desc = graphene.String(required=True)
+        col_classi = graphene.String(required=True)
+        
+        
+    def mutate(self, info, table_name, table_col_id, column_name, col_data_type, col_desc, col_classi):
+        APICALLFUNCTION('CreateTableColInfo2 mutation', 'null')
+        table_dtl = Table_info_dtl2.objects.filter(table_name=table_name)
+        if table_dtl.count() == 1:
+            table_dtl1 = Table_info_dtl2.objects.get(table_name=table_name)
+            Tablecolinfo = Table_col_info2(table_id=table_dtl1.table_id, table_col_id=table_col_id, column_name=column_name, col_data_type=col_data_type, col_desc=col_desc, col_classi=col_classi) 
+            Tablecolinfo.save()    
+            return CreateTableColInfo2(table_col_info=Tablecolinfo, message=f"{table_name} table name of column created successfully") 
+        else:
+            return CreateTableColInfo2(message=f"{table_name} table name is not found")
+        
+class UpdateTableColInfo2(graphene.Mutation):
+    message = graphene.String()
+
+    class Arguments:
+        table_name = graphene.String(required=True)
+        table_col_id = graphene.Int(required=True)
+        old_column_name = graphene.String(required=True)
+        new_column_name = graphene.String(required=True)
+        col_data_type = graphene.String(required=True)
+        col_desc = graphene.String(required=True)
+        col_classi = graphene.String(required=True)
+
+    def mutate(self, info, table_name, table_col_id, old_column_name, new_column_name, col_data_type, col_desc, col_classi):
+        APICALLFUNCTION('UpdateTableColInfo2 mutation', 'null')
+        table_dtl = Table_info_dtl2.objects.filter(table_name=table_name)
+        if table_dtl.count() == 1:
+            table_dtl1 = Table_info_dtl2.objects.get(table_name=table_name)
+            record = Table_col_info2.objects.filter(table_id=table_dtl1.table_id, column_name=old_column_name)
+            if record.count() == 1:
+                record1 = Table_col_info2.objects.get(table_id=table_dtl1.table_id, column_name=old_column_name)
+                record1.table_col_id=table_col_id
+                record1.column_name=new_column_name
+                record1.col_data_type=col_data_type
+                record1.col_desc=col_desc
+                record1.col_classi=col_classi
+                record1.save()
+                return UpdateTableColInfo2(message=f"{table_name} table name of  {old_column_name} column name is successfully updated") 
+            else:
+                return UpdateTableColInfo2(message=f"{table_name} table name of  {old_column_name} column name is not found")
+        else:
+            return UpdateTableColInfo2(message=f"{table_name} table name is not found")
+
+class DeleteTableColInfo2(graphene.Mutation):
+    message = graphene.String()
+
+    class Arguments:
+        table_name = graphene.String(required=True)
+        column_name = graphene.String(required=True)
+       
+
+    def mutate(self, info, table_name, column_name):
+        APICALLFUNCTION('DeleteTableColInfo2 mutation', 'null')
+        table_dtl = Table_info_dtl2.objects.filter(table_name=table_name)
+        if table_dtl.count() == 1:
+            table_dtl1 = Table_info_dtl2.objects.get(table_name=table_name)
+            record = Table_col_info2.objects.filter(table_id=table_dtl1.table_id, column_name=column_name)
+            if record.count() == 1:
+                record1 = Table_col_info2.objects.get(table_id=table_dtl1.table_id, column_name=column_name)
+                record1.delete()
+                return DeleteTableColInfo2(message=f"{table_name} table name of {column_name} column is successfully deleted")                                
+            else:
+                return DeleteTableColInfo2(message=f"{table_name} table name of {column_name} column is not found")
+        else:
+            return DeleteTableColInfo2(message=f"{table_name} table name is not found")
         
         
 
@@ -4811,18 +5985,31 @@ class DeleteTableRowWithTableRefId(graphene.Mutation):
     class Arguments:
         table_id = graphene.Int(required=True)
         table_ref_id = graphene.String(required=True)
+        user_id = graphene.String(required=True)
        
 
-    def mutate(self, info, table_id, table_ref_id):
-        APICALLFUNCTION('DeleteTableRowWithTableRefId mutation', 'null')
-        record = Table_data_info.objects.filter(table_id=table_id, table_ref_id=table_ref_id)
-        if record:
-            for i in record:
-                table_data = Table_data_info.objects.get(table_data_id=i.table_data_id)
-                table_data.delete()
-            return DeleteTableRowWithTableRefId(message=f"{table_id} table_id and {table_ref_id} table_ref_id data deleted successfully")
+    def mutate(self, info, table_id, table_ref_id, user_id):
+        if user_id == "0":
+            APICALLFUNCTION('DeleteTableRowWithTableRefId mutation', 'null')
+            record = Table_data_info.objects.filter(table_id=table_id, table_ref_id=table_ref_id)
+            if record:
+                for i in record:
+                    table_data = Table_data_info.objects.get(table_data_id=i.table_data_id)
+                    table_data.delete()
+                return DeleteTableRowWithTableRefId(message=f"{table_id} table_id and {table_ref_id} table_ref_id data deleted successfully")
+            else:
+                return DeleteTableRowWithTableRefId(message=f"{table_id} table_id and {table_ref_id} table_ref_id data is not found")
+            
         else:
-            return DeleteTableRowWithTableRefId(message=f"{table_id} table_id and {table_ref_id} table_ref_id data is not found")
+            APICALLFUNCTION('DeleteTableRowWithTableRefId mutation', 'null')
+            record = Table_data_info.objects.filter(table_id=table_id, table_ref_id=table_ref_id, user_id=user_id)
+            if record:
+                for i in record:
+                    table_data = Table_data_info.objects.get(table_data_id=i.table_data_id, user_id=i.user_id)
+                    table_data.delete()
+                return DeleteTableRowWithTableRefId(message=f"{table_id} table_id and {table_ref_id} table_ref_id data deleted successfully by {user_id} user")
+            else:
+                return DeleteTableRowWithTableRefId(message=f"{table_id} table_id and {table_ref_id} table_ref_id data is not found")
             
             
             
@@ -4864,6 +6051,25 @@ class DeleteTableAllDataByTableId(graphene.Mutation):
             return DeleteTableAllDataByTableId(message=f"{table_id} table_id all data deleted successfully")
         else:
             return DeleteTableAllDataByTableId(message=f"{table_id} table_id is not found")            
+
+
+class DeleteTableAllDataByTableId2(graphene.Mutation):
+    message = graphene.String()
+
+    class Arguments:
+        table_id = graphene.Int(required=True)
+       
+
+    def mutate(self, info, table_id):
+        APICALLFUNCTION('DeleteTableAllDataByTableId2 mutation', 'null')
+        record = Table_data_info2.objects.filter(table_id=table_id)
+        if record:
+            for i in record:
+                table_data = Table_data_info2.objects.get(table_data_id=i.table_data_id)
+                table_data.delete()
+            return DeleteTableAllDataByTableId2(message=f"{table_id} table_id all data deleted successfully")
+        else:
+            return DeleteTableAllDataByTableId2(message=f"{table_id} table_id is not found")            
         
         
 
@@ -4875,10 +6081,12 @@ class TableDataInput(graphene.InputObjectType):
     table_ref_id = graphene.String()
     tab_rel_id = graphene.String()
     user_id = graphene.String()
+    db = graphene.Int()
     
 
 class CreateMultipleDynamicTableData(graphene.Mutation):
     table_data_info_type = graphene.List(TableDataInfoType)
+    table_data_info_type2 = graphene.List(TableDataInfoType2)
     mutation = graphene.Boolean()
     class Input:
        table_data_list = graphene.List(TableDataInput)
@@ -4887,10 +6095,25 @@ class CreateMultipleDynamicTableData(graphene.Mutation):
     def mutate(self, info, table_data_list):
         APICALLFUNCTION('CreateMultipleDynamicTableData mutation', 'null')
         table_data = []
+        table_data2 = []
+        db = 0
         for item in table_data_list:
-            table_data_list = Table_data_info.objects.create(table_id=item['table_id'], table_col_id=item['table_col_id'], column_data=item['column_data'], column_name=item['column_name'], table_ref_id=item['table_ref_id'], tab_rel_id=item['tab_rel_id'], user_id=item['user_id']) 
-            table_data.append(table_data_list)
-        return CreateMultipleDynamicTableData(mutation=True, table_data_info_type=table_data)   
+            if item['db'] == 1:
+                print("4892 item", item)
+                db = item['db']
+                table_data_list = Table_data_info.objects.create(table_id=item['table_id'], table_col_id=item['table_col_id'], column_data=item['column_data'], column_name=item['column_name'], table_ref_id=item['table_ref_id'], tab_rel_id=item['tab_rel_id'], user_id=item['user_id']) 
+                table_data.append(table_data_list)
+            if item['db'] == 2:
+                print("4892 item", item)
+                db = item['db']
+                table_data_list = Table_data_info2.objects.create(table_id=item['table_id'], table_col_id=item['table_col_id'], column_data=item['column_data'], column_name=item['column_name'], table_ref_id=item['table_ref_id'], tab_rel_id=item['tab_rel_id'], user_id=item['user_id']) 
+                table_data2.append(table_data_list)
+        
+        if db == 1:
+            return CreateMultipleDynamicTableData(mutation=True, table_data_info_type=table_data)   
+        
+        if db == 2:
+            return CreateMultipleDynamicTableData(mutation=True, table_data_info_type2=table_data2)   
         
 
         
@@ -4930,7 +6153,7 @@ class Mutation(graphene.ObjectType):
     create_course_info = CreateCourseInfo.Field()    
     create_course_master = CreateCourseMaster.Field()    
     create_table_data_info = CreateTableDataInfo.Field()  
-    create_table_col_info = CreateTableColInfo.Field() 
+    # create_table_col_info = CreateTableColInfo.Field() 
     create_crud_info = CRUDInfo.Field()
     create_crud_info_user_id = CRUDInfoUserId.Field()
     user_validation_info = UserValidation.Field()  
@@ -4973,14 +6196,23 @@ class Mutation(graphene.ObjectType):
     create_table_info_dtl = CreateTableInfoDetail.Field()
     update_table_info_dtl = UpdateTableInfoDetail.Field()
     delete_table_info_dtl = DeleteTableInfoDetail.Field()
+
+    create_table_info_dtl2 = CreateTableInfoDetail2.Field()
+    update_table_info_dtl2 = UpdateTableInfoDetail2.Field()
+    delete_table_info_dtl2 = DeleteTableInfoDetail2.Field()
     
     create_table_col_info = CreateTableColInfo.Field()
     update_table_col_info = UpdateTableColInfo.Field()
     delete_table_col_info = DeleteTableColInfo.Field()
+
+    create_table_col_info2 = CreateTableColInfo2.Field()
+    update_table_col_info2 = UpdateTableColInfo2.Field()
+    delete_table_col_info2 = DeleteTableColInfo2.Field()
     
     delete_table_row_with_table_ref_id = DeleteTableRowWithTableRefId.Field()
     delete_table_row_with_table_rel_id = DeleteTableRowWithTableRelId.Field()
     delete_table_all_data_by_table_id = DeleteTableAllDataByTableId.Field()
+    delete_table_all_data_by_table_id2 = DeleteTableAllDataByTableId2.Field()
     
     
     create_multiple_dynamic_table_data = CreateMultipleDynamicTableData.Field()

@@ -70,6 +70,9 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate,login,logout,get_user_model
 from accountapp.Decorators import *
 
+from FunctionFolder.LogicalPart import *
+
+
 Usermodel = get_user_model()
 
 
@@ -4359,7 +4362,40 @@ def extract_multiple_keys(data, keys):
 
     return extracted_values
 
-def SourceFunctionFinal(source, sourceKey):
+def SourceFunctionFinalJson(source, sourceKey, db, userId):
+    try:
+        # print("source", source)
+        DataItem = []
+        sections={}
+        if db == 1:
+            TableUserDatafileName = main_media_url+f'/media/upload_file/user_data/user_table_data.json'
+
+            if os.path.isfile(TableUserDatafileName):
+                f = open(TableUserDatafileName)
+                json_data = json.load(f)
+                tableId=str(source)
+                table_user_data = json_data[userId][tableId]
+                for tudata in table_user_data:
+                    DataItem.append(extract_multiple_keys(tudata, sourceKey)) 
+
+        if db == 2:
+            TableUserDatafileName = main_media_url+f'/media/upload_file/user_data/user_table_data2.json'
+
+            if os.path.isfile(TableUserDatafileName):
+                f = open(TableUserDatafileName)
+                json_data = json.load(f)
+                tableId=str(source)
+                table_user_data = json_data[userId][tableId] 
+                for tudata in table_user_data:
+                    DataItem.append(extract_multiple_keys(tudata, sourceKey)) 
+
+        return DataItem
+
+    except Exception as err:
+        return Response({'status': status.HTTP_400_BAD_REQUEST, 'message':f'Something errors or {err}'}, status=status.HTTP_400_BAD_REQUEST)  
+    
+
+def SourceFunctionFinalReferenceJson(source, sourceKey):
     try:
         # print("source", source)
         DataItem = []
@@ -4411,6 +4447,33 @@ def SourceFunctionFinal(source, sourceKey):
     except Exception as err:
         return Response({'status': status.HTTP_400_BAD_REQUEST, 'message':f'Something errors or {err}'}, status=status.HTTP_400_BAD_REQUEST)  
     
+
+def SourceFunctionFinalTable(source, sourceKey, db, userId):
+    try:
+        print("source", source)
+        DataItem = []
+        sections={}
+        if db == 1:
+            tableId=source
+            table_data = Table_data_info.objects.filter(table_id=tableId, user_id=userId).order_by('-table_id')
+            # print("4459 table_data", table_data)
+            table_user_data = DynamicTableData(table_data)
+            # print("4461 table_user_data", table_user_data)
+            for tudata in table_user_data:
+                DataItem.append(extract_multiple_keys(tudata, sourceKey)) 
+
+        if db == 2:
+            tableId=source
+            table_data = Table_data_info2.objects.filter(table_id=tableId, user_id=userId).order_by('-table_id')
+            table_user_data = DynamicTableData(table_data)
+            for tudata in table_user_data:
+                DataItem.append(extract_multiple_keys(tudata, sourceKey)) 
+        return DataItem
+
+    except Exception as err:
+        return Response({'status': status.HTTP_400_BAD_REQUEST, 'message':f'Something errors or {err}'}, status=status.HTTP_400_BAD_REQUEST)  
+    
+
 
 def ExternalFunction(source, sourceKey):
     try:
@@ -6286,7 +6349,7 @@ def connect_and_query(databaseConnectionSource, query):
             print("MySQL connection is closed") 
         
 
-def FlowChartDataDynamic(data):
+def FlowChartDataDynamic(data, db, userId):
     try:
         Dic = {
             'fl1':[],
@@ -6312,15 +6375,42 @@ def FlowChartDataDynamic(data):
                         if value['type'] == 'source':
                             if value['data']['source']['sourceType'] == 'get data' and value['data']['source']['sourceInfoType'] == 'json data':
                                 sourceSection = {}
-                                print("value['data']['source']['sourceKey']", value['data']['source']["sourceKey"])
+                                # print("value['data']['source']['sourceKey']", value['data']['source']["sourceKey"])
                                 sourceSection["source"] = value['data']['source']['source']
                                 # sourceSection["sourceKey"] = value['data']['source']["sourceKey"]
-                                sourceSection["sourceData"] = SourceFunctionFinal(value['data']['source']["source"], value['data']['source']["sourceKey"])
+                                sourceSection["sourceData"] = SourceFunctionFinalJson(value['data']['source']["source"], value['data']['source']["sourceKey"], db, userId)
                                 sourceSection["sourceKey"] = KeyFindOut(sourceSection["sourceData"][0])
+                                # print("6323 sourceSection['sourceData']", sourceSection["sourceData"])
                                 sourceSection["child"] = value['child']
                                 Dic['fl1'].append({key: sourceSection})
                                 dataType = value['data']['source']['sourceInfoType']
                                 sourceKey += KeyFindOut(sourceSection["sourceData"][0])
+
+                            elif value['data']['source']['sourceType'] == 'get data' and value['data']['source']['sourceInfoType'] == 'reference json data':
+                                sourceSection = {}
+                                # print("value['data']['source']['sourceKey']", value['data']['source']["sourceKey"])
+                                sourceSection["source"] = value['data']['source']['source']
+                                # sourceSection["sourceKey"] = value['data']['source']["sourceKey"]
+                                sourceSection["sourceData"] = SourceFunctionFinalReferenceJson(value['data']['source']["source"], value['data']['source']["sourceKey"])
+                                sourceSection["sourceKey"] = KeyFindOut(sourceSection["sourceData"][0])
+                                print("6323 sourceSection['sourceData']", sourceSection["sourceData"])
+                                sourceSection["child"] = value['child']
+                                Dic['fl1'].append({key: sourceSection})
+                                dataType = value['data']['source']['sourceInfoType']
+                                sourceKey += KeyFindOut(sourceSection["sourceData"][0])
+
+                            elif value['data']['source']['sourceType'] == 'get data' and value['data']['source']['sourceInfoType'] == 'table data':
+                                sourceSection = {}
+                                # print("value['data']['source']['sourceKey']", value['data']['source']["sourceKey"])
+                                sourceSection["source"] = value['data']['source']['source']
+                                # sourceSection["sourceKey"] = value['data']['source']["sourceKey"]
+                                sourceSection["sourceData"] = SourceFunctionFinalTable(value['data']['source']["source"], value['data']['source']["sourceKey"], db, userId)
+                                sourceSection["sourceKey"] = KeyFindOut(sourceSection["sourceData"][0])
+                                # print("6323 sourceSection['sourceData']", sourceSection["sourceData"])
+                                sourceSection["child"] = value['child']
+                                Dic['fl1'].append({key: sourceSection})
+                                dataType = value['data']['source']['sourceInfoType']
+                                sourceKey += KeyFindOut(sourceSection["sourceData"][0])    
                                 
                             elif value['data']['source']['sourceType'] == 'get data' and value['data']['source']['sourceInfoType'] == 'external file creation':
                                 #external file create=tion function call 
@@ -6822,77 +6912,157 @@ def POSTFLOWCHARTDATAEDGEAPI(request):
         # finalData = []
         node_data=[]
         flow_name = request.data['flow_name']
-        flow_data = Table_data_info.objects.get(table_id=471, column_data=flow_name)
-        flow_data_ref = Table_data_info.objects.filter(table_id=471, table_ref_id=flow_data.table_ref_id)
-        for m in flow_data_ref:
-            if m.table_col_id == 2:
-                # node_data = eval(m.column_data)
-                node_data = json.loads(m.column_data)
-               
-        # node_data = request.data['node_data']
-        node = node_data['nodes']
-        edge = node_data['edges']
+        userId = request.data['userId']
+        db = DatabaseSetUpFunction(userId)
+        if db==1:
+            flow_data = Table_data_info.objects.get(table_id=471, column_data=flow_name, user_id=userId)
+            print("6832 flow_data", flow_data)
+            flow_data_ref = Table_data_info.objects.filter(table_id=471, table_ref_id=flow_data.table_ref_id)
+            for m in flow_data_ref:
+                if m.table_col_id == 2:
+                    # node_data = eval(m.column_data)
+                    node_data = json.loads(m.column_data)
+                
+            # node_data = request.data['node_data']
+            node = node_data['nodes']
+            edge = node_data['edges']
+            print("6842 node", node)
 
 
-        itemData = []
-        sectionDic = {}
-        medgeSourceIdBefore = ''
-        medgeTargetIdBefore = ''
-        beforePath = []
+            itemData = []
+            sectionDic = {}
+            medgeSourceIdBefore = ''
+            medgeTargetIdBefore = ''
+            beforePath = []
 
-        count =0
-        for e in edge:
-            count +=1  
-            key_to_find = e['source']
-            results = find_key(sectionDic, key_to_find)
-            if len(results) !=0:
-                for path, value in results:
-                    add_value(sectionDic, path+[e['target']], {})
-         
-            if count ==1:
-                medgeSourceIdBefore = e['source']   
-                medgeTargetIdBefore = e['target'] 
-                add_value(sectionDic, [e['source'],  e['target']], {})
+            count =0
+            for e in edge:
+                count +=1  
+                key_to_find = e['source']
+                results = find_key(sectionDic, key_to_find)
+                if len(results) !=0:
+                    for path, value in results:
+                        add_value(sectionDic, path+[e['target']], {})
+            
+                if count ==1:
+                    medgeSourceIdBefore = e['source']   
+                    medgeTargetIdBefore = e['target'] 
+                    add_value(sectionDic, [e['source'],  e['target']], {})
 
-        # print("sectionDic", sectionDic)
-        # secDic = {'target': ''}
-        # sourceItem = []
-        # data_section = {}
-        # target = ''
-        # for e in edge:
-        #     if secDic['target'] == e['target']:
-        #         target = e['target']
-        #         edgeData = [x for x in edge if x['target'] == e['target']]
-        #         for ed in edgeData:
-        #             sourceItem.append(ed['source'])
+            # print("sectionDic", sectionDic)
+            # secDic = {'target': ''}
+            # sourceItem = []
+            # data_section = {}
+            # target = ''
+            # for e in edge:
+            #     if secDic['target'] == e['target']:
+            #         target = e['target']
+            #         edgeData = [x for x in edge if x['target'] == e['target']]
+            #         for ed in edgeData:
+            #             sourceItem.append(ed['source'])
 
-        #         nodeData = [x for x in node if x['id'] == e['target']]
-        #         # print("nodeData", nodeData)
-        #         for nd in nodeData:
-        #             data_section = FilterTypeCheck(nd)
-        #     else:
-        #         secDic['target'] = e['target']
-           
-        # sectionDic['merge_data'] = { 'source': list(set(sourceItem)), 'target': target, 'data': data_section }
- 
-        for n in node:
-            key_to_find = n['id']
-            results = find_key(sectionDic, key_to_find)
-            if len(results) !=0:
-                for path, value in results:
-                    section = FilterTypeCheck(n)
-                    modify_json_value(sectionDic, path+['data'], section)
+            #         nodeData = [x for x in node if x['id'] == e['target']]
+            #         # print("nodeData", nodeData)
+            #         for nd in nodeData:
+            #             data_section = FilterTypeCheck(nd)
+            #     else:
+            #         secDic['target'] = e['target']
+            
+            # sectionDic['merge_data'] = { 'source': list(set(sourceItem)), 'target': target, 'data': data_section }
+    
+            for n in node:
+                key_to_find = n['id']
+                results = find_key(sectionDic, key_to_find)
+                if len(results) !=0:
+                    for path, value in results:
+                        section = FilterTypeCheck(n)
+                        modify_json_value(sectionDic, path+['data'], section)
 
-        # print("sectionDic", sectionDic)            
-        # processType, fl1, fl2, fl3, fl4, fl5, sourceKey, dataType, external_source = FlowChartData(sectionDic)
-        # print("processType", processType)
-        processType, Dic = DynamicFlowchart(sectionDic)
-        # print("dic", Dic)
-        dpkey, dataType, sourceKey, DicSection = FlowChartDataDynamic(Dic)
-        # return Response({'message':'success', 'status': status.HTTP_200_OK, 'processType': processType, 'external_source':external_source, 'dataType':dataType, 'sourceKey':sourceKey, 'data': sectionDic, 'fl1': fl1, 'fl2': fl2, 'fl3':fl3, 'fl4':fl4, 'fl5':fl5})
-        return Response({'message':'success','status': status.HTTP_200_OK, 'processType': processType, 'dataType':dataType, 'sourceKey':sourceKey, 'data': sectionDic, 'Dic': Dic, 'DicSection': DicSection})
-        # return Response({'message':'success','status': status.HTTP_200_OK, 'processType': processType, 'Dic': Dic})
-        # return Response({'message':'success','status': status.HTTP_200_OK})
+            # print("sectionDic", sectionDic)            
+            # processType, fl1, fl2, fl3, fl4, fl5, sourceKey, dataType, external_source = FlowChartData(sectionDic)
+            # print("processType", processType)
+            processType, Dic = DynamicFlowchart(sectionDic)
+            print("6898 dic", Dic)
+            dpkey, dataType, sourceKey, DicSection = FlowChartDataDynamic(Dic, db, userId)
+            print("6914 sourceKey", sourceKey)
+            # print("6915 DicSection", DicSection)
+            # return Response({'message':'success', 'status': status.HTTP_200_OK, 'processType': processType, 'external_source':external_source, 'dataType':dataType, 'sourceKey':sourceKey, 'data': sectionDic, 'fl1': fl1, 'fl2': fl2, 'fl3':fl3, 'fl4':fl4, 'fl5':fl5})
+            return Response({'message':'success','status': status.HTTP_200_OK, 'processType': processType, 'dataType':dataType, 'sourceKey':sourceKey, 'data': sectionDic, 'Dic': Dic, 'DicSection': DicSection})
+            # return Response({'message':'success','status': status.HTTP_200_OK, 'processType': processType, 'Dic': Dic})
+            # return Response({'message':'success','status': status.HTTP_200_OK})
+        
+        elif db==2:
+            flow_data = Table_data_info2.objects.get(table_id=471, column_data=flow_name, user_id=userId)
+            flow_data_ref = Table_data_info2.objects.filter(table_id=471, table_ref_id=flow_data.table_ref_id)
+            for m in flow_data_ref:
+                if m.table_col_id == 2:
+                    # node_data = eval(m.column_data)
+                    node_data = json.loads(m.column_data)
+                
+            # node_data = request.data['node_data']
+            node = node_data['nodes']
+            edge = node_data['edges']
+
+
+            itemData = []
+            sectionDic = {}
+            medgeSourceIdBefore = ''
+            medgeTargetIdBefore = ''
+            beforePath = []
+
+            count =0
+            for e in edge:
+                count +=1  
+                key_to_find = e['source']
+                results = find_key(sectionDic, key_to_find)
+                if len(results) !=0:
+                    for path, value in results:
+                        add_value(sectionDic, path+[e['target']], {})
+            
+                if count ==1:
+                    medgeSourceIdBefore = e['source']   
+                    medgeTargetIdBefore = e['target'] 
+                    add_value(sectionDic, [e['source'],  e['target']], {})
+
+            # print("sectionDic", sectionDic)
+            # secDic = {'target': ''}
+            # sourceItem = []
+            # data_section = {}
+            # target = ''
+            # for e in edge:
+            #     if secDic['target'] == e['target']:
+            #         target = e['target']
+            #         edgeData = [x for x in edge if x['target'] == e['target']]
+            #         for ed in edgeData:
+            #             sourceItem.append(ed['source'])
+
+            #         nodeData = [x for x in node if x['id'] == e['target']]
+            #         # print("nodeData", nodeData)
+            #         for nd in nodeData:
+            #             data_section = FilterTypeCheck(nd)
+            #     else:
+            #         secDic['target'] = e['target']
+            
+            # sectionDic['merge_data'] = { 'source': list(set(sourceItem)), 'target': target, 'data': data_section }
+    
+            for n in node:
+                key_to_find = n['id']
+                results = find_key(sectionDic, key_to_find)
+                if len(results) !=0:
+                    for path, value in results:
+                        section = FilterTypeCheck(n)
+                        modify_json_value(sectionDic, path+['data'], section)
+
+            # print("sectionDic", sectionDic)            
+            # processType, fl1, fl2, fl3, fl4, fl5, sourceKey, dataType, external_source = FlowChartData(sectionDic)
+            # print("processType", processType)
+            processType, Dic = DynamicFlowchart(sectionDic)
+            # print("dic", Dic)
+            dpkey, dataType, sourceKey, DicSection = FlowChartDataDynamic(Dic, db, userId)
+            # return Response({'message':'success', 'status': status.HTTP_200_OK, 'processType': processType, 'external_source':external_source, 'dataType':dataType, 'sourceKey':sourceKey, 'data': sectionDic, 'fl1': fl1, 'fl2': fl2, 'fl3':fl3, 'fl4':fl4, 'fl5':fl5})
+            return Response({'message':'success','status': status.HTTP_200_OK, 'processType': processType, 'dataType':dataType, 'sourceKey':sourceKey, 'data': sectionDic, 'Dic': Dic, 'DicSection': DicSection})
+            # return Response({'message':'success','status': status.HTTP_200_OK, 'processType': processType, 'Dic': Dic})
+            # return Response({'message':'success','status': status.HTTP_200_OK})
 
     except Exception as err:
         return Response({'status': status.HTTP_400_BAD_REQUEST, 'message':f'Something errors or {err}'}, status=status.HTTP_400_BAD_REQUEST)  
@@ -7866,7 +8036,7 @@ def PipeLineAPICreateCodeWriteAPI(request):
         api_data_fetch_type = request.data['api_data_fetch_type']
         code = request.data['code']
 
-        print("5352")
+        print("5352 user", user)
 
         # paramList = eval(request.data['paramList'])
 
@@ -8071,7 +8241,10 @@ def GETUIDynamicAPI(request, api_name, user):
         try:
             paramList = eval(request.data['paramList'])
         except:
-            paramList=request.data
+            try:
+                paramList=request.data['paramList']
+            except:
+                paramList=request.data
         # print("5531 request.data", request.data)
         # paramList = request.data['paramList']
         print("5531 paramList", paramList)
@@ -9262,55 +9435,67 @@ def ThreePointerMinpCalculationAPI(request):
 @api_view(['POST'])
 def ThreePointerD3CalculationAPI(request):
     try:
-        fileNameRule = main_media_url+f'/media/upload_file/investing/json/rule.json'
+        starting_point = request.data['starting_point']
+        starting_value = request.data['starting_value']
+        daygap = request.data['daygap']
+        first_run = request.data['first_run']
+        value_range_list2 = request.data['value_range_list2']
+        input_p = request.data['input_p']
+        d1_point0 = request.data['d1_point0']
+        d1_point1 = request.data['d1_point1']
+        d2_point2 = request.data['d2_point2']
+        minp_value = request.data['minp_value']
+        ThreePointerD3CalculationAPIFunction(starting_point, starting_value, daygap, first_run, value_range_list2, input_p, d1_point0, d1_point1, d2_point2, minp_value)
 
-        if os.path.isfile(fileNameRule):
-            fr = open(fileNameRule)
-            rule_data = json.load(fr)
-            dfList = []
-            SumList=[]
-            count=0
+        # fileNameRule = main_media_url+f'/media/upload_file/investing/json/rule.json'
+
+        # if os.path.isfile(fileNameRule):
+        #     fr = open(fileNameRule)
+        #     rule_data = json.load(fr)
+        #     dfList = []
+        #     SumList=[]
+        #     count=0
 
         
-            starting_point = request.data['starting_point']
-            starting_value = request.data['starting_value']
-            daygap = request.data['daygap']
-            first_run = request.data['first_run']
-            value_range_list2 = request.data['value_range_list2']
+        #     starting_point = request.data['starting_point']
+        #     starting_value = request.data['starting_value']
+        #     daygap = request.data['daygap']
+        #     first_run = request.data['first_run']
+        #     value_range_list2 = request.data['value_range_list2']
 
-            input_p = request.data['input_p']
+        #     input_p = request.data['input_p']
         
-            d1_point0 = request.data['d1_point0']
-            d1_point1 = request.data['d1_point1']
-            d2_point2 = request.data['d2_point2']
+        #     d1_point0 = request.data['d1_point0']
+        #     d1_point1 = request.data['d1_point1']
+        #     d2_point2 = request.data['d2_point2']
         
 
-            minp_value = request.data['minp_value']
+        #     minp_value = request.data['minp_value']
            
 
 
-            if first_run == "YES" or first_run == "Yes" or first_run == "yes":  
-                file_name1 =  main_media_url+'/media/upload_file/investing/xlsx/summay_data_file.xlsx'
-                file_name2 = main_media_url+'/media/upload_file/investing/xlsx/raw_data_file.xlsx'
-                # file_name3 = main_media_url+'/media/upload_file/investing/xlsx/new_point_data.xlsx'
+        #     if first_run == "YES" or first_run == "Yes" or first_run == "yes":  
+        #         file_name1 =  main_media_url+'/media/upload_file/investing/xlsx/summay_data_file.xlsx'
+        #         file_name2 = main_media_url+'/media/upload_file/investing/xlsx/raw_data_file.xlsx'
+        #         # file_name3 = main_media_url+'/media/upload_file/investing/xlsx/new_point_data.xlsx'
 
-                # empty_df3 = pd.DataFrame()
-                # empty_df3.to_excel(file_name3, index=False)
+        #         # empty_df3 = pd.DataFrame()
+        #         # empty_df3.to_excel(file_name3, index=False)
 
-                sum_max_df1 = pd.read_excel(file_name1)
-                try:
-                    exist_data = sum_max_df1['first_run'].iloc[0]
-                    if exist_data == "YES" or exist_data == "Yes" or exist_data == "yes":
-                        empty_df = pd.DataFrame()
-                        empty_df.to_excel(file_name1, index=False)
-                        empty_df.to_excel(file_name2, index=False)
-                except:
-                    empty_df = pd.DataFrame()
-                    empty_df.to_excel(file_name1, index=False)
-                    empty_df.to_excel(file_name2, index=False)
+        #         sum_max_df1 = pd.read_excel(file_name1)
+        #         try:
+        #             exist_data = sum_max_df1['first_run'].iloc[0]
+        #             if exist_data == "YES" or exist_data == "Yes" or exist_data == "yes":
+        #                 empty_df = pd.DataFrame()
+        #                 empty_df.to_excel(file_name1, index=False)
+        #                 empty_df.to_excel(file_name2, index=False)
+        #         except:
+        #             empty_df = pd.DataFrame()
+        #             empty_df.to_excel(file_name1, index=False)
+        #             empty_df.to_excel(file_name2, index=False)
 
-            summary_data= PointerCalculationd3(starting_point, starting_value, rule_data, value_range_list2, dfList, count, SumList, daygap, first_run, input_p, d1_point0,  d1_point1, d2_point2, minp_value)
-            return Response({'status': status.HTTP_200_OK, 'summary_data':summary_data})
+        summary_data= PointerCalculationd3(starting_point, starting_value, rule_data, value_range_list2, dfList, count, SumList, daygap, first_run, input_p, d1_point0,  d1_point1, d2_point2, minp_value)
+        return Response({'status': status.HTTP_200_OK, 'summary_data':summary_data})
 
 
     except Exception as error:
@@ -9320,39 +9505,45 @@ def ThreePointerD3CalculationAPI(request):
 @api_view(['POST'])
 def MainPointerCalculationAPI(request):
     try:
-        fileNameRule = main_media_url+f'/media/upload_file/investing/json/rule.json'
-        fileNameRuleX = main_media_url+f'/media/upload_file/investing/json/rulex.json'
-        fileNameRuleY = main_media_url+f'/media/upload_file/investing/json/ruley.json'
+        starting_point = request.data['starting_point']
+        starting_value = request.data['starting_value']
+        daygap = request.data['daygap']
+        value_range_list2 = request.data['value_range_list2']
+        main_data, summary_data, summary_data2,  range_point = MainPointerCalculationAPIFunction(starting_point, starting_value, daygap, value_range_list2)
+        SendMessage("", "MainPointerCalculationAPI", "Main Pointer Calculation API Call")
+        # fileNameRule = main_media_url+f'/media/upload_file/investing/json/rule.json'
+        # fileNameRuleX = main_media_url+f'/media/upload_file/investing/json/rulex.json'
+        # fileNameRuleY = main_media_url+f'/media/upload_file/investing/json/ruley.json'
 
-        if os.path.isfile(fileNameRule) and os.path.isfile(fileNameRuleX) and os.path.isfile(fileNameRuleY):
-            fr = open(fileNameRule)
-            rule_data = json.load(fr)
-            frx = open(fileNameRuleX)
-            rule_data_x = json.load(frx)
-            fry = open(fileNameRuleY)
-            rule_data_y = json.load(fry)
+        # if os.path.isfile(fileNameRule) and os.path.isfile(fileNameRuleX) and os.path.isfile(fileNameRuleY):
+        #     fr = open(fileNameRule)
+        #     rule_data = json.load(fr)
+        #     frx = open(fileNameRuleX)
+        #     rule_data_x = json.load(frx)
+        #     fry = open(fileNameRuleY)
+        #     rule_data_y = json.load(fry)
 
-            SumList=[]
+        #     SumList=[]
 
-            starting_point = request.data['starting_point']
-            starting_value = request.data['starting_value']
-            daygap = request.data['daygap']
-            value_range_list2 = request.data['value_range_list2']
+        #     starting_point = request.data['starting_point']
+        #     starting_value = request.data['starting_value']
+        #     daygap = request.data['daygap']
+        #     value_range_list2 = request.data['value_range_list2']
             
 
-            file_name1 =  main_media_url+'/media/upload_file/investing/xlsx/summay_data_file2.xlsx'
-            empty_df = pd.DataFrame()
-            empty_df.to_excel(file_name1, index=False)
+        #     file_name1 =  main_media_url+'/media/upload_file/investing/xlsx/summay_data_file2.xlsx'
+        #     empty_df = pd.DataFrame()
+        #     empty_df.to_excel(file_name1, index=False)
 
            
-            main_data, summary_data, summary_data2,  range_point = MainPointerCalculation(starting_point, starting_value, rule_data, rule_data_x, rule_data_y, value_range_list2, SumList, daygap)
-            # main_data, range_point = MainPointerCalculation(starting_point, starting_value, rule_data, rule_data_x, rule_data_y, value_range_list2, SumList, daygap)
-            # result = MainPointerCalculation(starting_point, starting_value, rule_data, rule_data_x, rule_data_y, value_range_list2, SumList, daygap)
-            # if result == True:
-            #     return Response({'status': status.HTTP_200_OK, 'message':'success'})
-            return Response({'status': status.HTTP_200_OK, "main_data": main_data, 'summary_data': summary_data, "summary_data2": summary_data2,  "range_point": range_point})
-
-
+        #     main_data, summary_data, summary_data2,  range_point = MainPointerCalculation(starting_point, starting_value, rule_data, rule_data_x, rule_data_y, value_range_list2, SumList, daygap)
+        #     # main_data, range_point = MainPointerCalculation(starting_point, starting_value, rule_data, rule_data_x, rule_data_y, value_range_list2, SumList, daygap)
+        #     # result = MainPointerCalculation(starting_point, starting_value, rule_data, rule_data_x, rule_data_y, value_range_list2, SumList, daygap)
+        #     # if result == True:
+        #     #     return Response({'status': status.HTTP_200_OK, 'message':'success'})
+        #     return Response({'status': status.HTTP_200_OK, "main_data": main_data, 'summary_data': summary_data, "summary_data2": summary_data2,  "range_point": range_point})
+        
+        return Response({'status': status.HTTP_200_OK, "main_data": main_data, 'summary_data': summary_data, "summary_data2": summary_data2,  "range_point": range_point})
     except Exception as error:
         return Response({'status': status.HTTP_400_BAD_REQUEST, 'message':f'Something errors or {error}'}, status=status.HTTP_400_BAD_REQUEST)        
 
@@ -9360,47 +9551,61 @@ def MainPointerCalculationAPI(request):
 @api_view(['POST'])
 def ThreePointerD3MinpCalculationAPI(request):
     try:
-        fileNameRule = main_media_url+f'/media/upload_file/investing/json/rule.json'
+        starting_point = request.data['starting_point']
+        starting_value = request.data['starting_value']
+        daygap = request.data['daygap']
+        first_run = request.data['first_run']
+        value_range_list2 = request.data['value_range_list2']
 
-        if os.path.isfile(fileNameRule):
-            fr = open(fileNameRule)
-            rule_data = json.load(fr)
-            dfList = []
-            SumList=[]
-            count=0
+        input_p = request.data['input_p']
+        
+        d1_point0 = request.data['d1_point0']
+        d1_point1 = request.data['d1_point1']
+        d2_point2 = request.data['d2_point2']
+
+        minp_data = ThreePointerD3MinpCalculationAPIFunction(starting_point, starting_value, daygap, first_run, value_range_list2, input_p, d1_point0, d1_point1, d2_point2)
+        SendMessage("", "ThreePointerD3MinpCalculationAPI", "Three Pointer D3Minp Calculation API Call")
+
+        # fileNameRule = main_media_url+f'/media/upload_file/investing/json/rule.json'
+        # if os.path.isfile(fileNameRule):
+        #     fr = open(fileNameRule)
+        #     rule_data = json.load(fr)
+        #     dfList = []
+        #     SumList=[]
+        #     count=0
 
         
-            starting_point = request.data['starting_point']
-            starting_value = request.data['starting_value']
-            daygap = request.data['daygap']
-            first_run = request.data['first_run']
-            value_range_list2 = request.data['value_range_list2']
+        #     starting_point = request.data['starting_point']
+        #     starting_value = request.data['starting_value']
+        #     daygap = request.data['daygap']
+        #     first_run = request.data['first_run']
+        #     value_range_list2 = request.data['value_range_list2']
 
-            input_p = request.data['input_p']
+        #     input_p = request.data['input_p']
         
-            d1_point0 = request.data['d1_point0']
-            d1_point1 = request.data['d1_point1']
-            d2_point2 = request.data['d2_point2']
+        #     d1_point0 = request.data['d1_point0']
+        #     d1_point1 = request.data['d1_point1']
+        #     d2_point2 = request.data['d2_point2']
         
 
-            if first_run == "YES" or first_run == "Yes" or first_run == "yes":  
-                file_name1 =  main_media_url+'/media/upload_file/investing/xlsx/summay_data_file.xlsx'
-                file_name2 = main_media_url+'/media/upload_file/investing/xlsx/raw_data_file.xlsx'
-                sum_max_df1 = pd.read_excel(file_name1)
-                try:
-                    exist_data = sum_max_df1['first_run'].iloc[0]
-                    if exist_data == "YES" or exist_data == "Yes" or exist_data == "yes":
-                        empty_df = pd.DataFrame()
-                        empty_df.to_excel(file_name1, index=False)
-                        empty_df.to_excel(file_name2, index=False)
-                except:
-                    empty_df = pd.DataFrame()
-                    empty_df.to_excel(file_name1, index=False)
-                    empty_df.to_excel(file_name2, index=False)
+        #     if first_run == "YES" or first_run == "Yes" or first_run == "yes":  
+        #         file_name1 =  main_media_url+'/media/upload_file/investing/xlsx/summay_data_file.xlsx'
+        #         file_name2 = main_media_url+'/media/upload_file/investing/xlsx/raw_data_file.xlsx'
+        #         sum_max_df1 = pd.read_excel(file_name1)
+        #         try:
+        #             exist_data = sum_max_df1['first_run'].iloc[0]
+        #             if exist_data == "YES" or exist_data == "Yes" or exist_data == "yes":
+        #                 empty_df = pd.DataFrame()
+        #                 empty_df.to_excel(file_name1, index=False)
+        #                 empty_df.to_excel(file_name2, index=False)
+        #         except:
+        #             empty_df = pd.DataFrame()
+        #             empty_df.to_excel(file_name1, index=False)
+        #             empty_df.to_excel(file_name2, index=False)
 
-            minp_data= PointerCalculationd3Minp(starting_point, starting_value, rule_data, value_range_list2, dfList, count, SumList, daygap, first_run, input_p, d1_point0,  d1_point1, d2_point2)
-            return Response({'status': status.HTTP_200_OK, 'minp_data':minp_data})
-
+        #     minp_data= PointerCalculationd3Minp(starting_point, starting_value, rule_data, value_range_list2, dfList, count, SumList, daygap, first_run, input_p, d1_point0,  d1_point1, d2_point2)
+        #     return Response({'status': status.HTTP_200_OK, 'minp_data':minp_data})
+        return Response({'status': status.HTTP_200_OK, 'minp_data':minp_data})
     except Exception as error:
         return Response({'status': status.HTTP_400_BAD_REQUEST, 'message':f'Something errors or {error}'}, status=status.HTTP_400_BAD_REQUEST)        
 
@@ -9448,28 +9653,29 @@ def FetchNewPointData(request):
 @api_view(['GET'])
 def GETDAPI(request):
     try:
-        sections = {}
-        items = []
-        refId = []
+        items = GETDAPIFunction()
+        # sections = {}
+        # items = []
+        # refId = []
 
        
-        api_name_value = Table_data_info.objects.filter(table_id=1)
-        for k in api_name_value:
-            refId.append(k.table_ref_id)
+        # api_name_value = Table_data_info.objects.filter(table_id=1)
+        # for k in api_name_value:
+        #     refId.append(k.table_ref_id)
                     
-        refId = list(set(refId))
+        # refId = list(set(refId))
 
-        for m in refId:
-            for i in api_name_value:
-                if i.table_ref_id==m:
-                    sections[i.column_name]=i.column_data
-                    sections['table_ref_id']=i.table_ref_id
-            if sections != "":
-                items.append(sections)   
-                sections = {}
+        # for m in refId:
+        #     for i in api_name_value:
+        #         if i.table_ref_id==m:
+        #             sections[i.column_name]=i.column_data
+        #             sections['table_ref_id']=i.table_ref_id
+        #     if sections != "":
+        #         items.append(sections)   
+        #         sections = {}
 
         result, message, main_data = userMetaDataModel(data=items, datasource="User", user_id=14)        
-                     
+        SendMessage("", "GETDAPI", "GETD API Call")
         return Response({'status': status.HTTP_200_OK, "message":"success", "data": main_data})
     except Exception as err:
         return Response({'status': status.HTTP_400_BAD_REQUEST, 'message':f'Something errors or {err}'}, status=status.HTTP_400_BAD_REQUEST)  
@@ -9553,9 +9759,13 @@ def SendNotificationMessageAPI(request):
         subject = request.data['subject']
         message = request.data['message']
 
-        SendMessage(email, subject, message)
-
-        return Response({'status': status.HTTP_200_OK, "message":"Message successfully send."})
+        # SendMessage(email, subject, message)
+        result = SendMessageFunction(email, subject, message)
+        SendMessage("", "SendNotificationMessageAPI", "Send Notification Message API Call")
+        if result == True: 
+            return Response({'status': status.HTTP_200_OK, "message":"Message successfully send."})
+        if result == False: 
+            return Response({'status': status.HTTP_400_BAD_REQUEST, 'message':f'Something errors'}, status=status.HTTP_400_BAD_REQUEST)  
 
     except Exception as err:
         return Response({'status': status.HTTP_400_BAD_REQUEST, 'message':f'Something errors or {err}'}, status=status.HTTP_400_BAD_REQUEST)  
@@ -9564,15 +9774,17 @@ def SendNotificationMessageAPI(request):
 @api_view(['GET'])
 def GetMessageAPI(request, email):
     try:
-        fileName = main_media_url+f'/media/upload_file/investing/json/message.json'
-        f = open(fileName)
-        data = json.load(f)
-        array_data = data['data']
-        unread_data = []
-        for d in array_data:
-            inbound_data = [x for x in d['inbound'] if x['email'] == email and x['is_read'] == 'False']
-            if len(inbound_data) != 0:
-                unread_data.append(d)
+        unread_data = GetMessageAPIFunction(email)
+        SendMessage("", "GetMessageAPI", "Get Message API Call")
+        # fileName = main_media_url+f'/media/upload_file/investing/json/message.json'
+        # f = open(fileName)
+        # data = json.load(f)
+        # array_data = data['data']
+        # unread_data = []
+        # for d in array_data:
+        #     inbound_data = [x for x in d['inbound'] if x['email'] == email and x['is_read'] == 'False']
+        #     if len(inbound_data) != 0:
+        #         unread_data.append(d)
            
         # print("unread_data", unread_data)
 
@@ -9585,31 +9797,35 @@ def GetMessageAPI(request, email):
 @api_view(['PUT'])
 def UpdateMessageAPI(request, message_id):
     try:
-        fileName = main_media_url+f'/media/upload_file/investing/json/message.json'
-        f = open(fileName)
-        data = json.load(f)
-        array_data = data['data']
-        unread_data = []
-        for i in range(len(array_data)):
-            for key in array_data[i].keys():
-                if key == 'message_id':
-                    if array_data[i][key] == message_id:
-                        compareValue = [x for x in array_data[i]['inbound'] if x['is_read'] == 'False']
-                        if len(compareValue)!=0:
-                            for j in range(len(array_data[i]['inbound'])):
-                                if array_data[i]['inbound'][j]['is_read'] ==  'False':
-                                    array_data[i]['inbound'][j]['email'] = array_data[i]['inbound'][j]['email']
-                                    array_data[i]['inbound'][j]['subject'] = array_data[i]['inbound'][j]['subject']
-                                    array_data[i]['inbound'][j]['message'] = array_data[i]['inbound'][j]['message']
-                                    array_data[i]['inbound'][j]['is_read'] = "True"
-                                    array_data[i]['inbound'][j]['time'] = array_data[i]['inbound'][j]['time']
-                                    file_data={}
-                                    with open(fileName, 'w', encoding='utf-8') as file:
-                                        file_data["data"]=array_data
-                                        json.dump(file_data, file, indent=4)  
+        result = UpdateMessageAPIFunction(message_id)
+        SendMessage("", "UpdateMessageAPI", "Update Message API Call")
+        # fileName = main_media_url+f'/media/upload_file/investing/json/message.json'
+        # f = open(fileName)
+        # data = json.load(f)
+        # array_data = data['data']
+        # unread_data = []
+        # for i in range(len(array_data)):
+        #     for key in array_data[i].keys():
+        #         if key == 'message_id':
+        #             if array_data[i][key] == message_id:
+        #                 compareValue = [x for x in array_data[i]['inbound'] if x['is_read'] == 'False']
+        #                 if len(compareValue)!=0:
+        #                     for j in range(len(array_data[i]['inbound'])):
+        #                         if array_data[i]['inbound'][j]['is_read'] ==  'False':
+        #                             array_data[i]['inbound'][j]['email'] = array_data[i]['inbound'][j]['email']
+        #                             array_data[i]['inbound'][j]['subject'] = array_data[i]['inbound'][j]['subject']
+        #                             array_data[i]['inbound'][j]['message'] = array_data[i]['inbound'][j]['message']
+        #                             array_data[i]['inbound'][j]['is_read'] = "True"
+        #                             array_data[i]['inbound'][j]['time'] = array_data[i]['inbound'][j]['time']
+        #                             file_data={}
+        #                             with open(fileName, 'w', encoding='utf-8') as file:
+        #                                 file_data["data"]=array_data
+        #                                 json.dump(file_data, file, indent=4)  
 
-
-        return Response({'status': status.HTTP_200_OK, "message":"user have been seen the message successfully"})
+        if result == True:
+            return Response({'status': status.HTTP_200_OK, "message":"user have been seen the message successfully"})
+        if result == False:
+            return Response({'status': status.HTTP_400_BAD_REQUEST, 'message':f'Something errors'}, status=status.HTTP_400_BAD_REQUEST)  
 
     except Exception as err:
         return Response({'status': status.HTTP_400_BAD_REQUEST, 'message':f'Something errors or {err}'}, status=status.HTTP_400_BAD_REQUEST)  
@@ -9652,9 +9868,13 @@ def SendOutboundMessageAPI(request):
         email = request.data['email']
         message = request.data['message']
 
-        SendOutboundMessage(message_id, email, message)
-
-        return Response({'status': status.HTTP_200_OK, "message":"Outbound Message successfully send."})
+        # SendOutboundMessage(message_id, email, message)
+        result = SendOutboundMessageFunction(message_id, email, message)
+        SendMessage("", "SendOutboundMessageAPI", "Send Outbound Message API Call")
+        if result == True:
+            return Response({'status': status.HTTP_200_OK, "message":"Outbound Message successfully send."})
+        if result == False:
+            return Response({'status': status.HTTP_400_BAD_REQUEST, 'message':f'Something errors'}, status=status.HTTP_400_BAD_REQUEST)  
 
     except Exception as err:
         return Response({'status': status.HTTP_400_BAD_REQUEST, 'message':f'Something errors or {err}'}, status=status.HTTP_400_BAD_REQUEST)  
@@ -9699,10 +9919,13 @@ def SendInboundMessageAPI(request):
         subject = request.data['subject']
         message = request.data['message']
 
-        SendInboundMessage(message_id, email, subject, message)
-
-        return Response({'status': status.HTTP_200_OK, "message":"Inbound Message successfully send."})
-
+        # SendInboundMessage(message_id, email, subject, message)
+        result = SendInboundMessageFunction(message_id, email, subject, message)
+        SendMessage("", "SendInboundMessageAPI", "Send Inbound Message API Call")
+        if result == True:
+            return Response({'status': status.HTTP_200_OK, "message":"Inbound Message successfully send."})
+        if result == False:
+            return Response({'status': status.HTTP_400_BAD_REQUEST, 'message':f'Something errors'}, status=status.HTTP_400_BAD_REQUEST)  
     except Exception as err:
         return Response({'status': status.HTTP_400_BAD_REQUEST, 'message':f'Something errors or {err}'}, status=status.HTTP_400_BAD_REQUEST)  
 
@@ -9777,9 +10000,13 @@ def BalanceSimulationAPI(request):
         # # if len(compareData)!=0:
         #     return Response({'status': status.HTTP_400_BAD_REQUEST, 'message':f'{name} name is already existed.'}, status=status.HTTP_400_BAD_REQUEST)  
 
-        BalanceSimulationJson(name, starting_point, starting_vlaue, left_side, right_side, all_starting_tabular_data, user_email)
-
-        return Response({'status': status.HTTP_200_OK, "message":"Balance Simulation successfully created."})
+        # BalanceSimulationJson(name, starting_point, starting_vlaue, left_side, right_side, all_starting_tabular_data, user_email)
+        result = BalanceSimulationJsonFunction(name, starting_point, starting_vlaue, left_side, right_side, all_starting_tabular_data, user_email)
+        SendMessage("", "BalanceSimulationAPI", "Balance Simulation API Call")
+        if result == True:
+            return Response({'status': status.HTTP_200_OK, "message":"Balance Simulation successfully created."})
+        if result == False:
+            return Response({'status': status.HTTP_400_BAD_REQUEST, 'message':f'Something errors'}, status=status.HTTP_400_BAD_REQUEST)  
 
     except Exception as err:
         return Response({'status': status.HTTP_400_BAD_REQUEST, 'message':f'Something errors or {err}'}, status=status.HTTP_400_BAD_REQUEST)  
@@ -9788,16 +10015,18 @@ def BalanceSimulationAPI(request):
 @api_view(['GET'])
 def GETBalanceSimulationAPI(request):
     try:
-        fileName = main_media_url+f'/media/upload_file/investing/json/balance_simulation.json'
-        f = open(fileName)
-        data = json.load(f)
-        array_data = data['data']
-        Datalist = []
-        for m in array_data:
-            Datalist.append({
-                'name': m['name'],
-                'user_email': m['user_email']
-            })      
+        Datalist = GETBalanceSimulationAPIFunction()
+        SendMessage("", "GETBalanceSimulationAPI", "GET Balance Simulation API Call")
+        # fileName = main_media_url+f'/media/upload_file/investing/json/balance_simulation.json'
+        # f = open(fileName)
+        # data = json.load(f)
+        # array_data = data['data']
+        # Datalist = []
+        # for m in array_data:
+        #     Datalist.append({
+        #         'name': m['name'],
+        #         'user_email': m['user_email']
+        #     })      
         return Response({'status': status.HTTP_200_OK, "message":"Balance Simulation successfully fetch data.", "data": Datalist})
 
     except Exception as err:
@@ -9807,11 +10036,13 @@ def GETBalanceSimulationAPI(request):
 @api_view(['GET'])
 def GETBalanceSimulationByNameAPI(request, name, user_email):
     try:
-        fileName = main_media_url+f'/media/upload_file/investing/json/balance_simulation.json'
-        f = open(fileName)
-        data = json.load(f)
-        array_data = data['data']
-        compareData = [x for x in array_data if x['name'] == name and x['user_email'] == user_email ]
+        compareData = GETBalanceSimulationByNameAPIFunction(name, user_email)
+        SendMessage("", "GETBalanceSimulationByNameAPI", "GET Balance Simulation By Name API Call")
+        # fileName = main_media_url+f'/media/upload_file/investing/json/balance_simulation.json'
+        # f = open(fileName)
+        # data = json.load(f)
+        # array_data = data['data']
+        # compareData = [x for x in array_data if x['name'] == name and x['user_email'] == user_email ]
       
         return Response({'status': status.HTTP_200_OK, "message":"Balance Simulation successfully fetch data by name.", "data": compareData})
 
@@ -9838,106 +10069,107 @@ def ALLStartingPointAPI(request):
     try:
         scalList = request.data['scalList']
         resultList = request.data['resultList']
-        
-        LeftSideSum=0
-        RightSideSum=0
-        LeftClosingPoint=0
-        RightClosingPoint=0
-        LeftSideSoldValue=0
-        RightSideSoldValue=0
-        DataList=[]
-        for starting_point in scalList:
-            for i in range(len(resultList)):
-                # print("7515", i)
-                item = resultList[i]
-                # print("item", item)
-                if len(str(item['Sold'])) != 0 and item['Sold'] !=0 and item["side"]== "left":
-                    if item["type"] == "ES" and item["side"]== "left":
-                        LeftSideSoldValue += (float(item['value']) - float(item['Sold']))*10
-                    else:
-                        LeftSideSoldValue += (float(item['value']) - float(item['Sold']))
+        DataList = ALLStartingPointAPIFunction(scalList, resultList)
+        SendMessage("", "ALLStartingPointAPI", "ALL Starting Point API Call")
+        # LeftSideSum=0
+        # RightSideSum=0
+        # LeftClosingPoint=0
+        # RightClosingPoint=0
+        # LeftSideSoldValue=0
+        # RightSideSoldValue=0
+        # DataList=[]
+        # for starting_point in scalList:
+        #     for i in range(len(resultList)):
+        #         # print("7515", i)
+        #         item = resultList[i]
+        #         # print("item", item)
+        #         if len(str(item['Sold'])) != 0 and item['Sold'] !=0 and item["side"]== "left":
+        #             if item["type"] == "ES" and item["side"]== "left":
+        #                 LeftSideSoldValue += (float(item['value']) - float(item['Sold']))*10
+        #             else:
+        #                 LeftSideSoldValue += (float(item['value']) - float(item['Sold']))
 
-                if len(str(item['Sold'])) != 0 and item['Sold'] !=0 and item["side"]== "right":
-                    if item["type"] == "ES" and item["side"]== "right":
-                        RightSideSoldValue += (float(item['value']) - float(item['Sold']))*10
-                    else:
-                        RightSideSoldValue += (float(item['value']) - float(item['Sold']))
+        #         if len(str(item['Sold'])) != 0 and item['Sold'] !=0 and item["side"]== "right":
+        #             if item["type"] == "ES" and item["side"]== "right":
+        #                 RightSideSoldValue += (float(item['value']) - float(item['Sold']))*10
+        #             else:
+        #                 RightSideSoldValue += (float(item['value']) - float(item['Sold']))
 
-                if item["type"] == "MES" and item["side"] == "left" and len(str(item['Sold'])) != 0 and item['Sold'] !=0:
-                    LeftSideSum+=0     
-                elif item["type"] == "MES" and  item["side"]== "left":
-                    LeftSideSum += float(item['value'])
-                    if float(item['point']) > float(starting_point):
-                        LeftClosingPoint +=0
-                    if float(item['point']) < float(starting_point):
-                        LeftClosingPoint -= (abs(float(starting_point)-float(item['point'])))
+        #         if item["type"] == "MES" and item["side"] == "left" and len(str(item['Sold'])) != 0 and item['Sold'] !=0:
+        #             LeftSideSum+=0     
+        #         elif item["type"] == "MES" and  item["side"]== "left":
+        #             LeftSideSum += float(item['value'])
+        #             if float(item['point']) > float(starting_point):
+        #                 LeftClosingPoint +=0
+        #             if float(item['point']) < float(starting_point):
+        #                 LeftClosingPoint -= (abs(float(starting_point)-float(item['point'])))
                     
 
-                if item["type"]  == "ES" and item["side"] == "left" and len(str(item['Sold'])) != 0 and item['Sold'] !=0:
-                    LeftSideSum+=0  
-                elif item["type"]  == "ES" and item["side"] == "left":
-                    LeftSideSum += float(item['value']) * 10
-                    if float(item['point']) > float(starting_point):
-                        LeftClosingPoint +=0
-                    if float(item['point']) < float(starting_point):
-                        LeftClosingPoint -= (abs(float(starting_point)-float(item['point']))*10)
+        #         if item["type"]  == "ES" and item["side"] == "left" and len(str(item['Sold'])) != 0 and item['Sold'] !=0:
+        #             LeftSideSum+=0  
+        #         elif item["type"]  == "ES" and item["side"] == "left":
+        #             LeftSideSum += float(item['value']) * 10
+        #             if float(item['point']) > float(starting_point):
+        #                 LeftClosingPoint +=0
+        #             if float(item['point']) < float(starting_point):
+        #                 LeftClosingPoint -= (abs(float(starting_point)-float(item['point']))*10)
 
-                if item["type"] == "ST" and item["side"] == "left" and len(str(item['Sold'])) != 0 and item['Sold'] !=0:
-                    LeftSideSum+=0     
-                elif item["type"]  == "ST" and  item["side"] == "left": 
-                    LeftSideSum += 0
-                    if float(item['point']) < float(starting_point):
-                        LeftClosingPoint +=abs(float(starting_point)-float(item['point']))
-                    # if float(item['point']) > float(starting_point):
-                    #     LeftClosingPoint -= abs(float(starting_point)-float(item['point']))
+        #         if item["type"] == "ST" and item["side"] == "left" and len(str(item['Sold'])) != 0 and item['Sold'] !=0:
+        #             LeftSideSum+=0     
+        #         elif item["type"]  == "ST" and  item["side"] == "left": 
+        #             LeftSideSum += 0
+        #             if float(item['point']) < float(starting_point):
+        #                 LeftClosingPoint +=abs(float(starting_point)-float(item['point']))
+        #             # if float(item['point']) > float(starting_point):
+        #             #     LeftClosingPoint -= abs(float(starting_point)-float(item['point']))
 
-                if item["type"]  == "MES" and  item["side"] == "right" and len(str(item['Sold'])) != 0 and item['Sold'] !=0:
-                    RightSideSum+=0     
-                elif item["type"]  == "MES" and  item["side"] == "right":
-                    RightSideSum += float(item['value'])
-                    if float(item['point']) < float(starting_point):
-                        RightClosingPoint +=0
-                    if float(item['point']) > float(starting_point):
-                         RightClosingPoint -= (abs(float(starting_point)-float(item['point'])))
+        #         if item["type"]  == "MES" and  item["side"] == "right" and len(str(item['Sold'])) != 0 and item['Sold'] !=0:
+        #             RightSideSum+=0     
+        #         elif item["type"]  == "MES" and  item["side"] == "right":
+        #             RightSideSum += float(item['value'])
+        #             if float(item['point']) < float(starting_point):
+        #                 RightClosingPoint +=0
+        #             if float(item['point']) > float(starting_point):
+        #                  RightClosingPoint -= (abs(float(starting_point)-float(item['point'])))
 
-                if item["type"]  == "ES" and  item["side"] == "right" and len(str(item['Sold'])) != 0 and item['Sold'] !=0:
-                    RightSideSum+=0     
-                elif item["type"] == "ES" and  item["side"]== "right":
-                    RightSideSum += float(item['value']) * 10
-                    if float(item['point']) < float(starting_point):
-                        RightClosingPoint +=0
-                    if float(item['point']) > float(starting_point):
-                        RightClosingPoint -= (abs(float(starting_point)-float(item['point']))*10)
+        #         if item["type"]  == "ES" and  item["side"] == "right" and len(str(item['Sold'])) != 0 and item['Sold'] !=0:
+        #             RightSideSum+=0     
+        #         elif item["type"] == "ES" and  item["side"]== "right":
+        #             RightSideSum += float(item['value']) * 10
+        #             if float(item['point']) < float(starting_point):
+        #                 RightClosingPoint +=0
+        #             if float(item['point']) > float(starting_point):
+        #                 RightClosingPoint -= (abs(float(starting_point)-float(item['point']))*10)
 
-                if item["type"]  == "ST" and  item["side"] == "right" and len(str(item['Sold'])) != 0 and item['Sold'] !=0:
-                    RightSideSum+=0    
-                elif item["type"]  == "ST" and  item["side"] == "right": 
-                    RightSideSum += 0
-                    if float(item['point']) > float(starting_point):
-                        RightClosingPoint -=abs(float(starting_point)-float(item['point']))
-                    if float(item['point']) < float(starting_point):
-                        RightClosingPoint += abs(float(starting_point)-float(item['point']))
+        #         if item["type"]  == "ST" and  item["side"] == "right" and len(str(item['Sold'])) != 0 and item['Sold'] !=0:
+        #             RightSideSum+=0    
+        #         elif item["type"]  == "ST" and  item["side"] == "right": 
+        #             RightSideSum += 0
+        #             if float(item['point']) > float(starting_point):
+        #                 RightClosingPoint -=abs(float(starting_point)-float(item['point']))
+        #             if float(item['point']) < float(starting_point):
+        #                 RightClosingPoint += abs(float(starting_point)-float(item['point']))
             
-            DataList.append({
-                'starting_point': starting_point,
-                'LeftSideSum': LeftSideSum,
-                'RightSideSum': RightSideSum,
-                'TotalSum': LeftSideSum+RightSideSum,
-                'LeftClosingPoint': LeftClosingPoint+LeftSideSoldValue,
-                'RightClosingPoint': RightClosingPoint+RightSideSoldValue,
-                'TotalClosingPoint': (LeftClosingPoint+LeftSideSoldValue)+(RightClosingPoint+RightSideSoldValue),
-                'TotalGainPoint': (LeftSideSum+RightSideSum)+(LeftClosingPoint+RightClosingPoint),
-                'TotalGainValue': ((LeftSideSum+RightSideSum)+(LeftClosingPoint+RightClosingPoint))*5,
-                'TotalRelializedValue': round(((LeftSideSoldValue+RightSideSoldValue)*5), 2),
-                'TotalSummaryValue': (((LeftSideSum+RightSideSum)+(LeftClosingPoint+RightClosingPoint))*5)+((LeftSideSoldValue+RightSideSoldValue)*5),
-            })
+        #     DataList.append({
+        #         'starting_point': starting_point,
+        #         'LeftSideSum': LeftSideSum,
+        #         'RightSideSum': RightSideSum,
+        #         'TotalSum': LeftSideSum+RightSideSum,
+        #         'LeftClosingPoint': LeftClosingPoint+LeftSideSoldValue,
+        #         'RightClosingPoint': RightClosingPoint+RightSideSoldValue,
+        #         'TotalClosingPoint': (LeftClosingPoint+LeftSideSoldValue)+(RightClosingPoint+RightSideSoldValue),
+        #         'TotalGainPoint': (LeftSideSum+RightSideSum)+(LeftClosingPoint+RightClosingPoint),
+        #         'TotalGainValue': ((LeftSideSum+RightSideSum)+(LeftClosingPoint+RightClosingPoint))*5,
+        #         'TotalRelializedValue': round(((LeftSideSoldValue+RightSideSoldValue)*5), 2),
+        #         'TotalSummaryValue': (((LeftSideSum+RightSideSum)+(LeftClosingPoint+RightClosingPoint))*5)+((LeftSideSoldValue+RightSideSoldValue)*5),
+        #     })
 
-            LeftSideSum=0
-            RightSideSum=0
-            LeftClosingPoint=0
-            RightClosingPoint=0
-            LeftSideSoldValue=0
-            RightSideSoldValue=0
+        #     LeftSideSum=0
+        #     RightSideSum=0
+        #     LeftClosingPoint=0
+        #     RightClosingPoint=0
+        #     LeftSideSoldValue=0
+        #     RightSideSoldValue=0
          
         # print("DataList", DataList)
 
@@ -9947,23 +10179,197 @@ def ALLStartingPointAPI(request):
         return Response({'status': status.HTTP_400_BAD_REQUEST, 'message':f'Something errors or {err}'}, status=status.HTTP_400_BAD_REQUEST)  
 
 
+#two layer dynamic data insert json
+def insert_data(data, key1, key2, new_entry):
+    """
+    Inserts new_entry into the nested dictionary structure.
+    If data is empty, it initializes it with the provided key structure.
+    """
+    
+    if not data:  # If data is empty, initialize with the given structure
+        data[key1] = {key2: [new_entry]}
+    else:
+        try:
+            data[key1][key2].append(new_entry)
+        except:
+            if key1 not in data:
+                data[key1] = {}
+            if key2 not in data[key1]:
+                data[key1][key2] = []
+            
+            data[key1][key2].append(new_entry)
+    
+    return data
+
+
+
 @api_view(['POST'])
 def FormBuilderDataSaveAPI(request):
     try:
         form_data = request.data['form_data']
         type_data = request.data['type_data']
+        dataSourceId = request.data['dataSourceId']
+        UserId = request.data['UserId']
 
-        # print("form_data", form_data)
+        print("form_data", form_data)
+        print("dataSourceId", dataSourceId, type(dataSourceId))
+        print("UserId", UserId, type(UserId))
+        # print("form_data.keys()", form_data.keys())
+
+        result = FormBuilderDataSaveAPIFunction(form_data, type_data, dataSourceId, UserId)
+        SendMessage("", "FormBuilderDataSaveAPI", "Form Builder Data Save API Call")
+        # unique_table_ref_id = generate_unique_random_number()
+
+        # if type_data == 'Normal Type' and str(dataSourceId) == "1":
+        #     f_data = Table_col_info.objects.filter(table_id=form_data['tableId'])
+        #     for fd in f_data: 
+        #         if fd.column_name in form_data.keys():
+        #             Table_data_info.objects.create(table_id=fd.table_id, table_col_id=fd.table_col_id, column_name=fd.column_name, column_data=form_data[fd.column_name], table_ref_id=unique_table_ref_id)
+            
+        # if type_data == 'Normal Type' and str(dataSourceId) == "2":
+        #     f_data = Table_col_info2.objects.filter(table_id=form_data['tableId'])
+        #     for fd in f_data: 
+        #         if fd.column_name in form_data.keys():
+        #             Table_data_info2.objects.create(table_id=fd.table_id, table_col_id=fd.table_col_id, column_name=fd.column_name, column_data=form_data[fd.column_name], table_ref_id=unique_table_ref_id)
+            
+        # if type_data == 'Normal Type' and str(dataSourceId) == "json data":
+        #     UserTableDatafileName = main_media_url+f'/media/upload_file/user_data/user_table_data.json'
+        #     tableId = form_data['tableId']
+        #     exclude_keys = {'tableId'}
+        #     form_data_exlcude_table_id = {k: v for k, v in form_data.items() if k not in exclude_keys}
+        #     if os.path.isfile(UserTableDatafileName):
+        #         f = open(UserTableDatafileName)
+        #         json_data = json.load(f)
+        #         # print("json_data", json_data)
+        #         updated_data = insert_data(json_data, UserId, str(tableId), form_data_exlcude_table_id)
+        #         # print(json.dumps(updated_data, indent=4))
+        #         def write_json(new_data, filename=UserTableDatafileName):
+        #             with open(filename, 'r+') as file:
+        #                 json.dump(new_data, file, indent=4)
+        #         write_json(updated_data)        
+
+        if result == True:       
+            return Response({'status': status.HTTP_200_OK, "message":"Successfully form data Saved"})
+        if result == False:       
+            return Response({'status': status.HTTP_400_BAD_REQUEST, 'message':f'Something errors'}, status=status.HTTP_400_BAD_REQUEST)  
+    except Exception as err:
+        return Response({'status': status.HTTP_400_BAD_REQUEST, 'message':f'Something errors or {err}'}, status=status.HTTP_400_BAD_REQUEST)  
+
+
+@api_view(['POST'])
+def FormBuilderDataSaveAPI2(request):
+    try:
+        form_data = request.data['form_data']
+        type_data = request.data['type_data']
+        dataSourceId = request.data['dataSourceId']
+        UserId = request.data['UserId']
+
+        print("form_data", form_data)
+        print("dataSourceId", dataSourceId, type(dataSourceId))
+        print("UserId", UserId, type(UserId))
         # print("form_data.keys()", form_data.keys())
 
         unique_table_ref_id = generate_unique_random_number()
 
-        if type_data == 'Normal Type':
+        if type_data == 'Normal Type' and str(dataSourceId) == "1":
             f_data = Table_col_info.objects.filter(table_id=form_data['tableId'])
             for fd in f_data: 
                 if fd.column_name in form_data.keys():
                     Table_data_info.objects.create(table_id=fd.table_id, table_col_id=fd.table_col_id, column_name=fd.column_name, column_data=form_data[fd.column_name], table_ref_id=unique_table_ref_id)
-      
+            
+        if type_data == 'Normal Type' and str(dataSourceId) == "2":
+            f_data = Table_col_info2.objects.filter(table_id=form_data['tableId'])
+            for fd in f_data: 
+                if fd.column_name in form_data.keys():
+                    Table_data_info2.objects.create(table_id=fd.table_id, table_col_id=fd.table_col_id, column_name=fd.column_name, column_data=form_data[fd.column_name], table_ref_id=unique_table_ref_id)
+            
+        if type_data == 'Normal Type' and str(dataSourceId) == "json data":
+            UserTableDatafileName = main_media_url+f'/media/upload_file/user_data/user_table_data.json'
+            tableId = form_data['tableId']
+            exclude_keys = {'tableId'}
+            form_data_exlcude_table_id = {k: v for k, v in form_data.items() if k not in exclude_keys}
+            if os.path.isfile(UserTableDatafileName):
+                f = open(UserTableDatafileName)
+                json_data = json.load(f)
+                # print("json_data", json_data)
+                updated_data = insert_data(json_data, UserId, str(tableId), form_data_exlcude_table_id)
+                # print(json.dumps(updated_data, indent=4))
+                def write_json(new_data, filename=UserTableDatafileName):
+                    with open(filename, 'r+') as file:
+                        json.dump(new_data, file, indent=4)
+                write_json(updated_data)        
+                # if len(json_data)!=0:
+                #     print("existing")
+                #     print("9989 json_data", json_data)
+                # else:    
+                #     def write_json(new_data, filename=UserTableDatafileName):
+                #         with open(filename, 'r+') as file:
+                #             # file_data = json.load(file)
+                #             # file_data["user_table_data"].append(new_data)
+                #             # file.seek(0)
+                #             json.dump(new_data, file, indent=4)
+                #     y = {
+                #         UserId:{
+                #             tableId:[
+                #                 form_data_exlcude_table_id
+                #             ]
+                #         }
+                #     }
+
+                #     write_json(y)
+
+            
+            # TableInfoDtlfileName = main_media_url+f'/media/upload_file/user_data/table_info_dtl.json'
+            # TableColInfofileName = main_media_url+f'/media/upload_file/user_data/table_col_info.json'
+            # TableDataInfofileName = main_media_url+f'/media/upload_file/user_data/table_data_info.json'
+            # UserTableDatafileName = main_media_url+f'/media/upload_file/user_data/user_table_data.json'
+
+            # if os.path.isfile(TableInfoDtlfileName) and os.path.isfile(TableColInfofileName) and os.path.isfile(TableDataInfofileName) and os.path.isfile(UserTableDatafileName):
+            #     f = open(TableInfoDtlfileName)
+            #     json_data = json.load(f)
+            #     table_info_dtl_data = json_data['table_info_dtl']  
+            #     # print("table_info_dtl_data", table_info_dtl_data)
+
+            #     f1 = open(TableColInfofileName)
+            #     json_data1 = json.load(f1)
+            #     table_col_info_data = json_data1['table_col_info']    
+            #     # print("table_col_info_data", table_col_info_data)
+
+            #     table_col_info_data_filter = [x for x in table_col_info_data if x['table_id'] == form_data['tableId']]
+            #     # print("9994 table_col_info_data_filter", table_col_info_data_filter)
+            #     # Section={}
+            #     for fd1 in table_col_info_data_filter: 
+            #         # print("fd1", fd1, fd1['column_name'])
+            #         if fd1['column_name'] in form_data.keys():
+            #             print("key found fd1['column_name']", fd1['column_name'])
+            #             # Section[fd1['column_name']] = 
+
+            #             # #data save table_data_info code
+            #             # f2= open(TableDataInfofileName)
+            #             # json_data2 = json.load(f2)
+            #             # table_data_info_data = json_data2['table_data_info'] 
+
+            #             # def write_json(new_data, filename=TableDataInfofileName):
+            #             #     with open(filename, 'r+') as file:
+            #             #         file_data = json.load(file)
+            #             #         file_data["table_data_info"].append(new_data)
+            #             #         file.seek(0)
+            #             #         json.dump(file_data, file, indent=4)
+            #             # y = {
+            #             #     "id": len(table_data_info_data)+1,
+            #             #     "table_id": fd1['table_id'],
+            #             #     "table_col_id": fd1['table_col_id'],
+            #             #     "column_name": fd1['column_name'],
+            #             #     "column_data": form_data[fd1['column_name']],
+            #             #     "table_ref_id": unique_table_ref_id,
+            #             #     "tab_rel_id": "",
+            #             #     "user_id": "",
+            #             #     "vflag": "",
+            #             #     "date": str(date.today()),
+            #             # }
+
+            #             # write_json(y)
+
         return Response({'status': status.HTTP_200_OK, "message":"Successfully form data Saved"})
 
     except Exception as err:
@@ -9974,29 +10380,62 @@ def FormBuilderDataSaveAPI(request):
 def GETDYNAMICTABLEDATAINFOPI(request, table_id):
     try:
         # table_id = request.data['table_id']
-        sections = {}
-        items = []
-        refId = []
+        items = GETDYNAMICTABLEDATAINFOPIFunction(table_id)
+        SendMessage("", "GETDYNAMICTABLEDATAINFOPI", "GET DYNAMIC TABLE DATA INFO API Call")
+        # sections = {}
+        # items = []
+        # refId = []
 
-       
-        api_name_value = Table_data_info.objects.filter(table_id=table_id)
-        for k in api_name_value:
-            refId.append(k.table_ref_id)
+        # api_name_value = Table_data_info.objects.filter(table_id=table_id)
+        # for k in api_name_value:
+        #     refId.append(k.table_ref_id)
                     
-        refId = list(set(refId))
+        # refId = list(set(refId))
 
-        for m in refId:
-            for i in api_name_value:
-                if i.table_ref_id==m:
-                    sections[i.column_name]=i.column_data
-                    sections['table_ref_id']=i.table_ref_id
-                    sections['table_id']=i.table_id
-                    sections['id']=i.table_data_id
-                    sections['tab_rel_id']=i.tab_rel_id
-                    sections['user_id']=i.user_id
-            if sections != "":
-                items.append(sections)   
-                sections = {}
+        # for m in refId:
+        #     for i in api_name_value:
+        #         if i.table_ref_id==m:
+        #             sections[i.column_name]=i.column_data
+        #             sections['table_ref_id']=i.table_ref_id
+        #             sections['table_id']=i.table_id
+        #             sections['id']=i.table_data_id
+        #             sections['tab_rel_id']=i.tab_rel_id
+        #             sections['user_id']=i.user_id
+        #     if sections != "":
+        #         items.append(sections)   
+        #         sections = {}
+         
+        return Response({'status': status.HTTP_200_OK, "message":"success", "data": items})
+    except Exception as err:
+        return Response({'status': status.HTTP_400_BAD_REQUEST, 'message':f'Something errors or {err}'}, status=status.HTTP_400_BAD_REQUEST)  
+
+@api_view(['GET'])
+def GETDYNAMICTABLEDATAINFOPI2(request, table_id):
+    try:
+        # table_id = request.data['table_id']
+        items = GETDYNAMICTABLEDATAINFOPI2Function(table_id)
+        SendMessage("", "GETDYNAMICTABLEDATAINFOPI2", "GET DYNAMIC TABLE DATA INFO API2 Call")
+        # sections = {}
+        # items = []
+        # refId = []       
+        # api_name_value = Table_data_info2.objects.filter(table_id=table_id)
+        # for k in api_name_value:
+        #     refId.append(k.table_ref_id)
+                    
+        # refId = list(set(refId))
+
+        # for m in refId:
+        #     for i in api_name_value:
+        #         if i.table_ref_id==m:
+        #             sections[i.column_name]=i.column_data
+        #             sections['table_ref_id']=i.table_ref_id
+        #             sections['table_id']=i.table_id
+        #             sections['id']=i.table_data_id
+        #             sections['tab_rel_id']=i.tab_rel_id
+        #             sections['user_id']=i.user_id
+        #     if sections != "":
+        #         items.append(sections)   
+        #         sections = {}
 
                      
         return Response({'status': status.HTTP_200_OK, "message":"success", "data": items})
@@ -10011,26 +10450,37 @@ def without_keys(d, keys):
 def UPDATEDYNAMICTABLEDATAINFOPI(request):
     try:
         table_data = request.data['table_data']
-      
-       
-        for td in table_data:
+        result = UPDATEDYNAMICTABLEDATAINFOPIFunction(table_data)
+        SendMessage("", "UPDATEDYNAMICTABLEDATAINFOPI", "UPDATE DYNAMIC TABLE DATA INF  API Call")
+        # for td in table_data:
           
-            remove_key_td = without_keys(td, ['id', 'table_id', 'table_ref_id', 'tab_rel_id', 'user_id'])
+        #     remove_key_td = without_keys(td, ['id', 'table_id', 'table_ref_id', 'tab_rel_id', 'user_id'])
 
-            length_of_update_key = len(remove_key_td)
-            count = 0
-            for key, value in remove_key_td.items():
-                try:
-                    table_id_ref_data = Table_data_info.objects.get(table_id=td['table_id'], table_ref_id=td['table_ref_id'], column_name=key)
-                    table_id_ref_data.column_data = value
-                    table_id_ref_data.save()
-                    count +=1 
-                except Exception as error:
-                    if  length_of_update_key >= count:
-                        table_id_info_col_data = Table_col_info.objects.get(table_id=td['table_id'], column_name=key)
-                        Table_data_info.objects.create(table_id=td['table_id'], table_col_id=table_id_info_col_data.table_col_id, column_data=value, column_name=key, table_ref_id=td['table_ref_id'], tab_rel_id= td['tab_rel_id'], user_id= td['user_id']) 
-        
-        return Response({'status': status.HTTP_200_OK, "message":"Successfully Updated"})
+        #     length_of_update_key = len(remove_key_td)
+        #     count = 0
+        #     for key, value in remove_key_td.items():
+        #         try:
+        #             table_id_ref_data = Table_data_info.objects.get(table_id=td['table_id'], table_ref_id=td['table_ref_id'], column_name=key)
+        #             table_id_ref_data.column_data = value
+        #             table_id_ref_data.save()
+        #             count +=1 
+        #         except Exception as error:
+        #             if  length_of_update_key >= count:
+        #                 table_id_info_col_data = Table_col_info.objects.get(table_id=td['table_id'], column_name=key)
+        #                 Table_data_info.objects.create(table_id=td['table_id'], table_col_id=table_id_info_col_data.table_col_id, column_data=value, column_name=key, table_ref_id=td['table_ref_id'], tab_rel_id= td['tab_rel_id'], user_id= td['user_id']) 
+        if result == True:
+            return Response({'status': status.HTTP_200_OK, "message":"Successfully Updated"})
+    except Exception as err:
+        return Response({'status': status.HTTP_400_BAD_REQUEST, 'message':f'Something errors or {err}'}, status=status.HTTP_400_BAD_REQUEST)  
+
+
+@api_view(['GET'])
+def GETDYNAMICJSONTABLEDATAINFOPI(request, table_id, user_id):
+    try:
+       
+        items = GETDYNAMICJSONTABLEDATAINFOPIFunction(table_id, user_id)
+        SendMessage("", "PageWiseDataShowAPI", "Page Wise Data Show API Call")
+        return Response({'status': status.HTTP_200_OK, "message":"success", "data": items})
     except Exception as err:
         return Response({'status': status.HTTP_400_BAD_REQUEST, 'message':f'Something errors or {err}'}, status=status.HTTP_400_BAD_REQUEST)  
 
@@ -10062,58 +10512,27 @@ def DatabaseConnectionMySqlAPI(request):
         return Response({'status': status.HTTP_400_BAD_REQUEST, 'message':f'Something errors or {error}'}, status=status.HTTP_400_BAD_REQUEST)  
 
 
-@api_view(['POST'])
-def PageDeleteAPI(request):
-    try:
-        table_id = request.data['table_id']
-        page_name = request.data['page_name']
-        page_data = Table_data_info.objects.filter(table_id=table_id, column_data=page_name)[0]
-        all_page = Table_data_info.objects.filter(table_ref_id=page_data.table_ref_id)
-        try:
-            for ap in all_page:
-                ap.delete()
-            return Response({'status': status.HTTP_200_OK, "message":"Page Deleted Successfully."})
-        except Exception as error:
-            return Response({'status': status.HTTP_400_BAD_REQUEST, 'message':f'{error}'}, status=status.HTTP_400_BAD_REQUEST)  
- 
-    except Exception as error:
-        return Response({'status': status.HTTP_400_BAD_REQUEST, 'message':f'Something errors or {error}'}, status=status.HTTP_400_BAD_REQUEST)  
+# @api_view(['POST'])
+# def PageDeleteAPI(request):
+#     try:
+#         table_id = request.data['table_id']
+#         page_name = request.data['page_name']
+#         result, message = PageDeleteAPIFunction(table_id, page_name)
+#         SendMessage("", "PageDeleteAPI", "Page Delete API Call")
+#         if result == True:
+#             return Response({'status': status.HTTP_200_OK, "message":message})
+#         if result == False:
+#             return Response({'status': status.HTTP_400_BAD_REQUEST, "message":message}, status=status.HTTP_400_BAD_REQUEST)
+        
+#     except Exception as error:
+#         return Response({'status': status.HTTP_400_BAD_REQUEST, 'message':f'Something errors or {error}'}, status=status.HTTP_400_BAD_REQUEST)  
 
 
 @api_view(['GET'])
 def PageWiseDataShowAPI(request, page_name):
     try:
-        sections = {}
-        items = []
-        refId = []
-
-        page_data = Table_data_info.objects.filter(table_id=642, column_data=page_name)[0]
-        all_page = Table_data_info.objects.filter(table_ref_id=page_data.table_ref_id)
-        # print("all_page", all_page)
-        for ap in all_page:
-            # print("columname columndata", ap.column_name, ap.column_data)
-            if ap.column_name == 'card_id':
-                card_data = Table_data_info.objects.get(table_id=534, column_data=ap.column_data)
-                card_data_filter = Table_data_info.objects.filter(table_ref_id=card_data.table_ref_id)
-                # print("card_data_filter", card_data_filter)
-                for k in card_data_filter:
-                    refId.append(k.table_ref_id)
-                            
-                refId = list(set(refId))
-                for m in refId:
-                    for i in card_data_filter:
-                        if i.table_ref_id==m:
-                            sections[i.column_name]=i.column_data
-                            sections['table_ref_id']=i.table_ref_id
-                            sections['table_id']=i.table_id
-                            sections['id']=i.table_data_id
-                            sections['tab_rel_id']=i.tab_rel_id
-                            sections['user_id']=i.user_id
-                    if sections != "":
-                        items.append(sections)   
-                        sections = {}
-                        refId=[]
-
+        items = PageWiseDataShowAPIFunction(page_name)
+        SendMessage("", "PageWiseDataShowAPI", "Page Wise Data Show API Call")
         return Response({'status': status.HTTP_200_OK, "message":"Page Data Fetch Successfully.", "data": items})
     except Exception as error:
         return Response({'status': status.HTTP_400_BAD_REQUEST, 'message':f'Something errors or {error}'}, status=status.HTTP_400_BAD_REQUEST)  
@@ -10122,20 +10541,10 @@ def PageWiseDataShowAPI(request, page_name):
 @api_view(['POST'])
 def PageDataClearAPI(request, table_id, table_col_id):
     try:
-        sections = {}
-        items = []
-        refId = []
-
-        page_data = Table_data_info.objects.filter(table_id=table_id, table_col_id=table_col_id)
-        # print("page_data", page_data)
-        for ap in page_data:
-            # print("columname columndata", ap.column_name, ap.column_data)
-            if ap.column_data.lower() == "true":
-                data_update = Table_data_info.objects.get(table_data_id=ap.table_data_id)
-                data_update.column_data = "false"
-                data_update.save()
-       
-        return Response({'status': status.HTTP_200_OK, "message":"Page Data Clear Successfully."})
+        result = PageDataClearAPIFunction(table_id, table_col_id)
+        SendMessage("", "PageDataClearAPI", "Page Data Clear API Call")
+        if result == True:
+            return Response({'status': status.HTTP_200_OK, "message":"Page Data Clear Successfully."})
     except Exception as error:
         return Response({'status': status.HTTP_400_BAD_REQUEST, 'message':f'Something errors or {error}'}, status=status.HTTP_400_BAD_REQUEST)  
  
@@ -10143,26 +10552,246 @@ def PageDataClearAPI(request, table_id, table_col_id):
 @api_view(['POST'])
 def PageDeleteAPI(request, table_id, table_col_id, page_name):
     try:
-        page_data = Table_data_info.objects.filter(table_id=table_id, table_col_id=table_col_id, column_data=page_name)
-        # print("page_data", page_data)
-        if len(page_data) != 0:
-            for ap in page_data:
-                # print("columname columndata", ap.column_name, ap.column_data)
-                try:
-                    page = Table_data_info.objects.filter(table_id=642, table_col_id=5, column_data=ap.column_data)
-                    for p in page:
-                        page_dk = Table_data_info.objects.filter(table_id=642, table_ref_id=p.table_ref_id)
-                        if len(page_dk)!=0:
-                            for pdk in page_dk:
-                                pdk.delete()
-                except:
-                    print("except")
-                else:
-                    page_d = Table_data_info.objects.filter(table_id=table_id, table_ref_id=ap.table_ref_id)   
-                    if len(page_d)!=0:
-                        for pd in page_d:
-                            pd.delete()
-        return Response({'status': status.HTTP_200_OK, "message":"Page Deleted Successfully."})
+        result = PageDeleteAPIFunction(table_id, table_col_id, page_name)
+        SendMessage("", "PageDeleteAPI", "Page Delete API Call")
+        if result == True:
+            return Response({'status': status.HTTP_200_OK, "message":"Page Deleted Successfully."})
+        if result == False:
+            return Response({'status': status.HTTP_400_BAD_REQUEST, "message":"Page Deleted Successfully."})
     except Exception as error:
         return Response({'status': status.HTTP_400_BAD_REQUEST, 'message':f'Something errors or {error}'}, status=status.HTTP_400_BAD_REQUEST)  
  
+
+#  user data created json file
+@api_view(['POST'])
+def TableInfoDtlCreate(request):
+    try:
+        data = request.data['data']
+        result, message = TableInfoDtlCreateFunction(data)
+        SendMessage("", "TableInfoDtlCreate", "Table Info Dtl Create API Call")
+        if result == True:
+            return Response({'status': status.HTTP_200_OK, "message":message})
+        if result == False:
+            return Response({'status': status.HTTP_400_BAD_REQUEST, "message":message})
+        
+    except Exception as error:
+        return Response({'status': status.HTTP_400_BAD_REQUEST, 'message':f'Something errors or {error}'}, status=status.HTTP_400_BAD_REQUEST)  
+ 
+@api_view(['POST'])
+def TableColInfoCreate(request):
+    try:
+        data = request.data['data']
+        # print("11 data", data,  data['table_name'])
+        result, message = TableColInfoCreateFunction(data)
+        SendMessage("", "TableColInfoCreate", "Table Col Info Create API Call")
+        if result == True:
+            return Response({'status': status.HTTP_200_OK, "message": message})
+        if result == False:
+            return Response({'status': status.HTTP_400_BAD_REQUEST, "message": message})
+        
+    except Exception as error:
+        return Response({'status': status.HTTP_400_BAD_REQUEST, 'message':f'Something errors or {error}'}, status=status.HTTP_400_BAD_REQUEST)  
+ 
+
+@api_view(['GET'])
+def JsonTableDataFetch(request, userId):
+    try:
+        tableItem = JsonTableDataFetchFunction(userId)
+        SendMessage("", "JsonTableDataFetch", "Json Table Data Fetch  API Call")
+        return Response({'status': status.HTTP_200_OK, "message":"Json Table Data Fetch Successfully.", "data": tableItem})
+        
+    except Exception as error:
+        return Response({'status': status.HTTP_400_BAD_REQUEST, 'message':f'Something errors or {error}'}, status=status.HTTP_400_BAD_REQUEST)  
+ 
+
+@api_view(['GET'])
+def ReferenceJsonTableDataFetch(request, userId):
+    try:
+        tableItem = ReferenceJsonTableDataFetchFunction(userId)
+        SendMessage("", "ReferenceJsonTableDataFetch", "Reference Json Table Data Fetch  API Call")
+        return Response({'status': status.HTTP_200_OK, "message":"Reference Json Table Data Fetch Successfully.", "data": tableItem})
+        
+    except Exception as error:
+        return Response({'status': status.HTTP_400_BAD_REQUEST, 'message':f'Something errors or {error}'}, status=status.HTTP_400_BAD_REQUEST)  
+ 
+@api_view(['GET'])
+def TableDataFetch(request, userId):
+    try:
+        tableItem = TableDataFetchFunction(userId)
+        SendMessage("", "TableDataFetch", "Json Table Data Fetch  API Call")
+        return Response({'status': status.HTTP_200_OK, "message":"Table Data Fetch Successfully.", "data": tableItem})
+        
+    except Exception as error:
+        return Response({'status': status.HTTP_400_BAD_REQUEST, 'message':f'Something errors or {error}'}, status=status.HTTP_400_BAD_REQUEST)  
+
+@api_view(['GET'])
+def FlowChartDataFetch(request, userId):
+    try:
+        tableItem = FlowChartDataFetchFunction(userId)
+        SendMessage("", "FlowChartDataFetch", "Flow Chart Data Fetch  API Call")
+        return Response({'status': status.HTTP_200_OK, "message":"Flow Chart Data Fetch Successfully.", "data": tableItem})
+        
+    except Exception as error:
+        return Response({'status': status.HTTP_400_BAD_REQUEST, 'message':f'Something errors or {error}'}, status=status.HTTP_400_BAD_REQUEST)  
+ 
+
+@api_view(['GET'])
+def AllTableDataFetch(request, userId):
+    try:
+        tableItem = AllTableDataFetchFunction(userId)
+        SendMessage("", "AllTableDataFetch", "All Table Data Fetch  API Call")
+        return Response({'status': status.HTTP_200_OK, "message":"All Table Data Fetch Successfully.", "data": tableItem})
+        
+    except Exception as error:
+        return Response({'status': status.HTTP_400_BAD_REQUEST, 'message':f'Something errors or {error}'}, status=status.HTTP_400_BAD_REQUEST)  
+ 
+@api_view(['POST'])
+def GetTableDataRelIdInfoByUser(request):
+    try:
+        userId = request.data['userId']
+        tableId = request.data['tableId']
+        tableColId = request.data['tableColId']
+        tabRelId = request.data['tabRelId']
+        print("userId, tableId, tableColId, tabRelId", userId, tableId, tableColId, tabRelId)
+        tableItem = GetTableDataRelIdInfoByUserFunction(userId, tableId, tableColId, tabRelId)
+        SendMessage("", "GetTableDataRelIdInfoByUser", "GetTableDataRelIdInfoByUser  API Call")
+        return Response({'status': status.HTTP_200_OK, "message":"GetTableDataRelIdInfoByUser Data Fetch Successfully.", "data": tableItem})
+        
+    except Exception as error:
+        return Response({'status': status.HTTP_400_BAD_REQUEST, 'message':f'Something errors or {error}'}, status=status.HTTP_400_BAD_REQUEST)  
+
+
+@api_view(['POST'])
+def TableDataColumnUpdate(request):
+    try:
+        user_id = request.data['user_id']
+        table_id = request.data['table_id']
+        table_ref_id = request.data['table_ref_id']
+        column_name = request.data['column_name']
+        column_data = request.data['column_data']
+        tableItem = TableDataColumnUpdateFunction(user_id, table_id, table_ref_id, column_name, column_data)
+        SendMessage("", "TableDataColumnUpdate", "TableDataColumnUpdate  API Call")
+        return Response({'status': status.HTTP_200_OK, "message":"Table Data Column Update Successfully.", "data": tableItem})
+        
+    except Exception as error:
+        return Response({'status': status.HTTP_400_BAD_REQUEST, 'message':f'Something errors or {error}'}, status=status.HTTP_400_BAD_REQUEST)  
+
+
+@api_view(['GET'])
+def DynamicTableGet(request, table_id, user_id):
+    try:
+        tableItem = DynamicTableGetFunction(table_id, user_id)
+        SendMessage("", "DynamicTableGet", "DynamicTableGet API Call")
+        return Response({'status': status.HTTP_200_OK, "message":"Dynamic Table Get Successfully.", "data": tableItem})
+        
+    except Exception as error:
+        return Response({'status': status.HTTP_400_BAD_REQUEST, 'message':f'Something errors or {error}'}, status=status.HTTP_400_BAD_REQUEST)  
+
+@api_view(['GET'])
+def DynamicTableGetByRefId(request, table_id, user_id, table_ref_id):
+    try:
+        tableItem = DynamicTableGetByRefIdFunction(table_id, user_id, table_ref_id)
+        SendMessage("", "DynamicTableGetByRefId", "DynamicTableGetByRefId API Call")
+        return Response({'status': status.HTTP_200_OK, "message":"Dynamic Table Get Ref Id Successfully.", "data": tableItem})
+        
+    except Exception as error:
+        return Response({'status': status.HTTP_400_BAD_REQUEST, 'message':f'Something errors or {error}'}, status=status.HTTP_400_BAD_REQUEST)  
+
+@api_view(['POST'])
+def DynamicTableGetAPI(request):
+    try:
+        tableItem, column_name, result_bool, message = DynamicTableGetFunction(request.data)
+        if result_bool == True:
+            SendMessage("", "DynamicTableGetAPI", "DynamicTableGetAPI Call")
+            return Response({'status': status.HTTP_200_OK, "message": message, "column_name": column_name, "data": tableItem})
+        if result_bool == False:
+            return Response({'status': status.HTTP_400_BAD_REQUEST, 'message':message}, status=status.HTTP_400_BAD_REQUEST)  
+    except Exception as error:
+        return Response({'status': status.HTTP_400_BAD_REQUEST, 'message':f'Something errors or {error}'}, status=status.HTTP_400_BAD_REQUEST)  
+
+
+@api_view(['POST'])
+def DynamicTableCreateAPI(request):
+    try:
+        tableItem, result_bool, message = DynamicTableCreateFunction(request.data)
+        if result_bool == True:
+            SendMessage("", "DynamicTableCreateAPI", "DynamicTableCreateAPI Call")
+            return Response({'status': status.HTTP_200_OK, "message": message, "data": tableItem})
+        if result_bool == False:
+            return Response({'status': status.HTTP_400_BAD_REQUEST, 'message':message}, status=status.HTTP_400_BAD_REQUEST)  
+    except Exception as error:
+        return Response({'status': status.HTTP_400_BAD_REQUEST, 'message':f'Something errors or {error}'}, status=status.HTTP_400_BAD_REQUEST)  
+
+@api_view(['POST'])
+def DynamicTableDeleteByRefId(request, table_id, user_id, table_ref_id):
+    try:
+        tableItem = DynamicTableDeleteByRefIdFunction(table_id, user_id, table_ref_id)
+        SendMessage("", "DynamicTableDeleteByRefId", "DynamicTableDeleteByRefId API Call")
+        return Response({'status': status.HTTP_200_OK, "message":"Dynamic Table Delete Ref Id Successfully.", "data": tableItem})
+        
+    except Exception as error:
+        return Response({'status': status.HTTP_400_BAD_REQUEST, 'message':f'Something errors or {error}'}, status=status.HTTP_400_BAD_REQUEST)  
+
+
+@api_view(['POST'])
+def CouponCheckAPI(request):
+    try:
+        tableItem, result_bool, message = CouponCheckFunction(request.data)
+        if result_bool == True:
+            SendMessage("", "CouponCheckAPI", "CouponCheckAPI Call")
+            return Response({'status': status.HTTP_200_OK, "message": message, "data": tableItem})
+        if result_bool == False:
+            return Response({'status': status.HTTP_400_BAD_REQUEST, 'message':message}, status=status.HTTP_400_BAD_REQUEST)  
+    except Exception as error:
+        return Response({'status': status.HTTP_400_BAD_REQUEST, 'message':f'Something errors or {error}'}, status=status.HTTP_400_BAD_REQUEST)  
+
+
+@api_view(['POST'])
+def UserRoleBaseRegisterAPI(request):
+    try:
+        tableItem, result_bool, message = UserRoleBaseRegisterFunction(request.data)
+        if result_bool == True:
+            SendMessage("", "UserRoleBaseRegisterAPI", "UserRoleBaseRegisterAPI Call")
+            return Response({'status': status.HTTP_200_OK, "message": message, "data": tableItem})
+        if result_bool == False:
+            return Response({'status': status.HTTP_400_BAD_REQUEST, 'message':message}, status=status.HTTP_400_BAD_REQUEST)  
+    except Exception as error:
+        return Response({'status': status.HTTP_400_BAD_REQUEST, 'message':f'Something errors or {error}'}, status=status.HTTP_400_BAD_REQUEST)  
+
+
+@api_view(['POST'])
+def UserLoginAPI(request):
+    try:
+        user_data, otp_data, result_bool, message = UserLoginFunction(request.data)
+        if result_bool == True:
+            SendMessage("", "UserLoginAPI", "UserLoginAPI Call")
+            return Response({'status': status.HTTP_200_OK, "message": message, "data": user_data, "otp_data": otp_data})
+        if result_bool == False:
+            return Response({'status': status.HTTP_400_BAD_REQUEST, 'message':message}, status=status.HTTP_400_BAD_REQUEST)  
+    except Exception as error:
+        return Response({'status': status.HTTP_400_BAD_REQUEST, 'message':f'Something errors or {error}'}, status=status.HTTP_400_BAD_REQUEST)  
+
+
+@api_view(['POST'])
+def UserOTPCheckAPI(request):
+    try:
+        userData, result_bool, message = UserOTPCheckFunction(request.data)
+        if result_bool == True:
+            SendMessage("", "UserOTPCheckAPI", "UserOTPCheckAPI Call")
+            return Response({'status': status.HTTP_200_OK, "message": message, "data": userData})
+        if result_bool == False:
+            return Response({'status': status.HTTP_400_BAD_REQUEST, 'message':message}, status=status.HTTP_400_BAD_REQUEST)  
+    except Exception as error:
+        return Response({'status': status.HTTP_400_BAD_REQUEST, 'message':f'Something errors or {error}'}, status=status.HTTP_400_BAD_REQUEST)  
+
+
+
+@api_view(['POST'])
+def EmailSendLalchan(request):        
+    try:
+        send_genflyo_mail()
+        return Response({"message": "Email Successfully Sent", 'status': status.HTTP_200_OK})
+    except Exception as err:
+        return Response({'status': status.HTTP_400_BAD_REQUEST, 'message':f'{err}'}, status=status.HTTP_400_BAD_REQUEST)
+        
+         

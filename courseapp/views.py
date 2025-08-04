@@ -7,7 +7,8 @@ from rest_framework.permissions import IsAuthenticated,IsAdminUser,AllowAny
 from rest_framework.response import Response
 
 from rest_framework.views import APIView
-
+from rest_framework.parsers import MultiPartParser
+from django.core.files.storage import default_storage
 from django.contrib import messages
 
 
@@ -24,6 +25,7 @@ from accountapp.DynamicFunction.Process_Log import ProcessLogFunction
 
 # global function
 from FunctionFolder.WrapperFunc import *
+from accountapp.helpers import *
 
 # Create your views here.
 
@@ -71,7 +73,16 @@ class InvitationEventUploadFileAPIView(APIView):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)  
         
-        
+
+class UploadImageReactFilePondView(APIView):
+    parser_classes = [MultiPartParser]
+
+    def post(self, request, *args, **kwargs):
+        file_obj = request.FILES['file']
+        file_name = default_storage.save(f'DK/dish/{file_obj.name}', file_obj)
+        file_url = default_storage.url(file_name)
+        return Response({'filePath': file_url})
+
 class CSVUploadFileAPIView(APIView):  
     def post(self,request):
         APICALLFUNCTION('CSVUploadFileAPIView', 'null')
@@ -137,7 +148,80 @@ def DriverActivationMail(request, email):
     else:
         return Response({'status':status.HTTP_400_BAD_REQUEST,'message':'Activation link is invalid.'}, status=status.HTTP_400_BAD_REQUEST)
         
-        
+
+
+def ActivationFalseToTrue(request, flag):
+    try:
+        count = 0
+        for i in flag:
+            if i.table_col_id==9 and i.column_name=="is_active" and i.column_data=="True":
+                count+=1
+            if i.table_col_id==11 and i.column_name=="is_email_verified" and i.column_data=="True":
+                count+=1
+        if count == 2:
+            return False, "Already user active and email verified"
+        else:
+            print("164")
+            for i in flag:
+                if i.table_col_id==11 and i.column_name=="is_email_verified" and i.column_data=="False":
+                    flag_detail_email_activation = Table_data_info2.objects.get(table_id=47, table_col_id=i.table_col_id, column_data=i.column_data, column_name=i.column_name, table_ref_id=i.table_ref_id, user_id=i.user_id)
+                    flag_detail_email_activation.column_data="True"
+                    flag_detail_email_activation.save()
+                            
+                if i.table_col_id==9 and i.column_name=="is_active" and i.column_data=="False":
+                    user_active = Table_data_info2.objects.get(table_id=47, table_col_id=i.table_col_id, column_data=i.column_data, column_name=i.column_name, table_ref_id=i.table_ref_id, user_id=i.user_id)
+                    user_active.column_data="True"
+                    user_active.save()
+            return True, "User activate and email verified successfully done."
+    except:
+        return render(request, "user_activation_error_page.html")
+
+@api_view(['GET'])   
+def UserActivationMail(request, email_or_username_or_phone_number):
+    APICALLFUNCTION('UserActivationMail', 'null')
+    try:
+        if email_or_username_or_phone_number:
+            print("email_or_username_or_phone_number", email_or_username_or_phone_number)
+            email_exist_check1 = Table_data_info2.objects.filter(table_id=47, table_col_id=1, column_data=email_or_username_or_phone_number)
+            print("186 email_exist_check1", email_exist_check1)
+            if email_exist_check1.count()==1:
+                email_exist_check = Table_data_info2.objects.get(table_id=47, table_col_id=1, column_data=email_or_username_or_phone_number)
+                flag = Table_data_info2.objects.filter(table_id=47, table_ref_id=email_exist_check.table_ref_id, user_id=email_exist_check.user_id)
+                print("189 flag", flag)
+                result, message = ActivationFalseToTrue(request, flag)
+                if result==True:
+                    return render(request, "user_activation_welcome_page.html")
+                else:
+                    return render(request, "user_activation_exist_done_page.html")
+                
+            username_exist_check1 = Table_data_info2.objects.filter(table_id=47, table_col_id=2, column_data=email_or_username_or_phone_number)
+            if username_exist_check1.count()==1:
+                username_exist_check = Table_data_info2.objects.get(table_id=47, table_col_id=2, column_data=email_or_username_or_phone_number)
+                flag = Table_data_info2.objects.filter(table_id=47, table_ref_id=username_exist_check.table_ref_id, user_id=username_exist_check.user_id)
+                result, message = ActivationFalseToTrue(request, flag)
+                if result==True:
+                    return render(request, "user_activation_welcome_page.html")
+                else:
+                    return render(request, "user_activation_exist_done_page.html")
+            
+            phone_exist_check1 = Table_data_info2.objects.filter(table_id=47, table_col_id=3, column_data=email_or_username_or_phone_number)
+            if phone_exist_check1.count()==1:
+                phone_exist_check = Table_data_info2.objects.get(table_id=47, table_col_id=3, column_data=email_or_username_or_phone_number)
+                flag = Table_data_info2.objects.filter(table_id=47, table_ref_id=phone_exist_check.table_ref_id, user_id=phone_exist_check.user_id)
+                result, message = ActivationFalseToTrue(request, flag)
+                if result==True:
+                    return render(request, "user_activation_welcome_page.html")
+                else:
+                    return render(request, "user_activation_exist_done_page.html")
+
+            return render(request, "user_activation_error_page.html")
+ 
+        else:
+            return render(request, "user_activation_error_page.html")
+            # return Response({'status':status.HTTP_400_BAD_REQUEST,'message':'Activation link is invalid.'}, status=status.HTTP_400_BAD_REQUEST)
+    except:
+        return render(request, "user_activation_error_page.html")
+
         
         
 def ForgetPasswordConfirm(request, email):
@@ -365,6 +449,7 @@ def ProcessStatusUpdateView(request):
         return Response({'status': status.HTTP_400_BAD_REQUEST, 'message':f'{err}'}, status=status.HTTP_400_BAD_REQUEST)
         
         
+
         
         
         

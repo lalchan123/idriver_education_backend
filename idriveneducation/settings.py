@@ -57,6 +57,8 @@ INSTALLED_APPS = [
     'courseapp',
 
     'emailserviceapp',
+
+    'anymail',
     
     # 3rd party apps
     'rest_framework',
@@ -184,8 +186,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql', 
         'NAME': 'itbusaah_idriveneducationdb',
-        'USER': 'itbusa',
-        'PASSWORD': 'Lalchan1234!',
+        'USER': 'root',
+        'PASSWORD': '',
         'HOST': 'localhost',   
         'PORT': '3306',
     }
@@ -258,14 +260,25 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'mail.itb-usa.a2hosted.com'
-EMAIL_USE_TLS = True
-EMAIL_PORT = 2525
-# EMAIL_HOST_USER = 'idriveneducation@itb-usa.a2hosted.com'
-EMAIL_HOST_USER = 'gotodawat@itb-usa.a2hosted.com'
-EMAIL_HOST_PASSWORD = 'Lalchan123!'
-DEFAULT_FROM_EMAIL = 'It Bangla Limited <pervez.cto@gmail.com>'
+# ANYMAIL = {
+#     # (exact settings here depend on your ESP...)
+#     "MAILGUN_API_KEY": "3042ba401bfbda19d267771e30154333-e298dd8e-4f59d3ef",
+#     "MAILGUN_SENDER_DOMAIN": 'sandboxd62d1a154de345f58e3a954ce851182c.mailgun.org',  # your Mailgun domain, if needed
+# }
+# EMAIL_BACKEND = 'anymail.backends.mailgun.EmailBackend'
+# EMAIL_HOST = 'smtp.mailgun.org'
+# EMAIL_USE_TLS = True
+# EMAIL_PORT = 587 
+# EMAIL_HOST_USER = 'postmaster@sandboxd62d1a154de345f58e3a954ce851182c.mailgun.org'
+# EMAIL_HOST_PASSWORD = 'cfc9229818c574d34ac289e89af69d83-e298dd8e-341f7547'
+# DEFAULT_FROM_EMAIL = 'It Bangla Limited <info.genflyo@gmail.com>'
 
-
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'smtp.gmail.com'
+# EMAIL_USE_TLS = True
+# EMAIL_PORT = 587
+# # EMAIL_HOST_USER = 'idriveneducation@itb-usa.a2hosted.com'
+# EMAIL_HOST_USER = 'info.genflyo@gmail.com'
+# EMAIL_HOST_PASSWORD = 'Zaya2019!'
+# DEFAULT_FROM_EMAIL = 'It Bangla Limited <info.genflyo@gmail.com>'
 
