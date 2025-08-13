@@ -199,6 +199,7 @@ urlpatterns = [
     path('dynamic-table-get-api/', DynamicTableGetAPI), #DK
     path('dynamic-table-create-api/', DynamicTableCreateAPI), #DK
     path('coupon-check-api/', CouponCheckAPI), #DK
+    path('restaurant-products-sales-api/', RestaurantProductsSelesAPI), #DK
     # path('order-confirm-mail-send-api/', OrderConfirmMailSendAPI), #DK
     # path('dynamic-table-delete-api/<int:table_id>/<str:user_id>/<str:table_ref_id>/', DynamicTableDeleteByRefId), #DK
 

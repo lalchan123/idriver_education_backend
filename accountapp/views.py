@@ -10747,6 +10747,19 @@ def CouponCheckAPI(request):
 
 
 @api_view(['POST'])
+def RestaurantProductsSelesAPI(request):
+    try:
+        tableItem, result_bool, message = RestaurantProductsSelesFunction(request.data)
+        if result_bool == True:
+            SendMessage("", "RestaurantProductsSelesAPI", "RestaurantProductsSelesAPI Call")
+            return Response({'status': status.HTTP_200_OK, "message": message, "data": tableItem})
+        if result_bool == False:
+            return Response({'status': status.HTTP_400_BAD_REQUEST, 'message':message}, status=status.HTTP_400_BAD_REQUEST)  
+    except Exception as error:
+        return Response({'status': status.HTTP_400_BAD_REQUEST, 'message':f'Something errors or {error}'}, status=status.HTTP_400_BAD_REQUEST)  
+
+
+@api_view(['POST'])
 def UserRoleBaseRegisterAPI(request):
     try:
         tableItem, result_bool, message = UserRoleBaseRegisterFunction(request.data)

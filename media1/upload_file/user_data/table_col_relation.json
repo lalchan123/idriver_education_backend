@@ -1,0 +1,25 @@
+{
+    "table_col_relation":[
+        {
+            "model_name": "A",
+            "column": [
+                {
+                    "a_colA1": "",
+                    "a_colA2": "",
+                    "a_op1": "",
+                    "a_colB1": "",
+                    "a_colB2": "",
+                    "a_result1": ""
+                },
+                {
+                    "a_colA1": "",
+                    "a_colA2": "",
+                    "a_op1": "",
+                    "a_colB1": "",
+                    "a_colB2": "",
+                    "a_result1": ""
+                }
+            ]
+        }
+    ]
+}

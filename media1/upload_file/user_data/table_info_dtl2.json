@@ -1,0 +1,18 @@
+{
+    "table_info_dtl2": [
+        {
+            "table_id": 1,
+            "table_name": "J1",
+            "table_description": "J1 desc",
+            "table_type": "json data",
+            "user_id": "2"
+        },
+        {
+            "table_id": 2,
+            "table_name": "J2",
+            "table_description": "J2 desc",
+            "table_type": "json data",
+            "user_id": "2"
+        }
+    ]
+}

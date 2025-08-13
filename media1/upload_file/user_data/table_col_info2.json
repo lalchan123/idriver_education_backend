@@ -1,0 +1,48 @@
+{
+    "table_col_info2": [
+        {
+            "id": 1,
+            "table_id": 1,
+            "table_col_id": "1",
+            "column_name": "j1c1",
+            "col_desc": "j1c1",
+            "col_data_type": "char",
+            "col_classi": "internal",
+            "col_visible": "True",
+            "user_id": "2"
+        },
+        {
+            "id": 2,
+            "table_id": 1,
+            "table_col_id": "2",
+            "column_name": "j1c2",
+            "col_desc": "j1c2",
+            "col_data_type": "char",
+            "col_classi": "internal",
+            "col_visible": "True",
+            "user_id": "2"
+        },
+        {
+            "id": 3,
+            "table_id": 2,
+            "table_col_id": "1",
+            "column_name": "j2c3",
+            "col_desc": "j2c3",
+            "col_data_type": "char",
+            "col_classi": "internal",
+            "col_visible": "True",
+            "user_id": "2"
+        },
+        {
+            "id": 4,
+            "table_id": 2,
+            "table_col_id": "2",
+            "column_name": "j2c4",
+            "col_desc": "j2c4",
+            "col_data_type": "char",
+            "col_classi": "internal",
+            "col_visible": "True",
+            "user_id": "2"
+        }
+    ]
+}

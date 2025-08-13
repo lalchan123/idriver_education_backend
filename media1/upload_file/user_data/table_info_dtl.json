@@ -1,0 +1,18 @@
+{
+    "table_info_dtl": [
+        {
+            "table_id": 1,
+            "table_name": "Json Table Data 18-06-2025 Json1",
+            "table_description": "Json Table Data 18-06-2025 Json1 Desc",
+            "table_type": "json data",
+            "user_id": "2"
+        },
+        {
+            "table_id": 2,
+            "table_name": "Json Table2 Data 18-06-2025 Json",
+            "table_description": "Json Table2 Data 18-06-2025 Json",
+            "table_type": "json data",
+            "user_id": "2"
+        }
+    ]
+}

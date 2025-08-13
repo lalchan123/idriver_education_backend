@@ -1066,6 +1066,73 @@ def CouponCheckFunction(data):
     except Exception as error:
         return [], False, f"Something errors or {error}"
     
+
+def RestaurantProductsSelesFunction(data):
+    try:
+        product_data = []
+        sales_data = []
+        if data['user_id'] !="":
+            data = Table_data_info2.objects.filter(table_id=data['table_id'], column_data=data['table_ref_id'], column_name='Restuarant_Name', user_id=data['user_id']) 
+            for d in data:
+                product_data += Table_data_info2.objects.filter(table_id=d.table_id, table_ref_id=d.table_ref_id) 
+
+            dish_or_product_data = DynamicTableData(product_data)
+            # print("1076 dish_or_product_data", dish_or_product_data)
+            # print("1076 dish_or_product_data", len(dish_or_product_data))
+            for dp in dish_or_product_data:
+                s_data = Table_data_info2.objects.filter(table_id=45, column_data=dp['Restuarant_Name'], column_name='Restaurant_Name') 
+                for d in s_data:
+                    order_hist_data = Table_data_info2.objects.filter(table_id=44, column_data=d.table_ref_id, column_name='Product_Rel_Id') 
+                    for od in order_hist_data:
+                        sales_data += Table_data_info2.objects.filter(table_id=od.table_id, table_ref_id=od.table_ref_id) 
+
+
+            sales_product_data = DynamicTableData(sales_data)
+            # print("1088 sales_product_data", sales_product_data)
+            # print("1089 sales_product_data", len(sales_product_data))
+            final_data={
+                'total_products': len(dish_or_product_data),
+                'total_sales': len(sales_product_data),
+                'products': dish_or_product_data,
+                'sales': sales_product_data,
+            }
+                
+          
+            return final_data, True, "Total Products and Total Sales Data Fetch Successfully." 
+        else:
+            data = Table_data_info2.objects.filter(table_id=data['table_id'], column_data=data['table_ref_id'], column_name='Restuarant_Name') 
+            for d in data:
+                product_data += Table_data_info2.objects.filter(table_id=d.table_id, table_ref_id=d.table_ref_id) 
+
+            dish_or_product_data = DynamicTableData(product_data)
+            # print("1076 dish_or_product_data", dish_or_product_data)
+            # print("1076 dish_or_product_data", len(dish_or_product_data))
+            for dp in dish_or_product_data:
+                s_data = Table_data_info2.objects.filter(table_id=45, column_data=dp['Restuarant_Name'], column_name='Restaurant_Name') 
+                for d in s_data:
+                    order_hist_data = Table_data_info2.objects.filter(table_id=44, column_data=d.table_ref_id, column_name='Product_Rel_Id') 
+                    for od in order_hist_data:
+                        sales_data += Table_data_info2.objects.filter(table_id=od.table_id, table_ref_id=od.table_ref_id) 
+
+
+            sales_product_data = DynamicTableData(sales_data)
+            # print("1088 sales_product_data", sales_product_data)
+            # print("1089 sales_product_data", len(sales_product_data))
+            final_data={
+                'total_products': len(dish_or_product_data),
+                'total_sales': len(sales_product_data),
+                'products': dish_or_product_data,
+                'sales': sales_product_data,
+            }
+                
+          
+            return final_data, True, "Total Products and Total Sales Data Fetch Successfully."              
+       
+                
+    except Exception as error:
+        return [], False, f"Something errors or {error}"
+
+    
     
 def UserRoleBaseRegisterFunction(data):
     try:
